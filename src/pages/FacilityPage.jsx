@@ -14,19 +14,42 @@ const FacilityPage = () => {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-16">
+
+    <>
+  {/* Hero Section */}
+      <section
+        id="home"
+        className="relative max-w-7xl mx-auto text-white py-32 overflow-hidden min-h-[400px]"
+        style={{
+          backgroundImage: `linear-gradient(rgba(15,23,43,.9),rgba(15,23,43,.9)), url('/hero-bg.jpg')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      >
+        <div className="container mx-auto px-4 text-center  gap-10">
+         <h1 className="text-5xl md:text-6xl font-bold mb-4 text-center leading-tight">
+         Facilities
+            </h1>
+        </div>
+      </section>
+ <div className="max-w-7xl mx-auto px-4 py-16">
       <h1 className="text-4xl font-bold text-center mb-4 text-gray-800">Our Facilities</h1>
       <p className="text-center text-gray-600 mb-12 text-lg">
         We offer a range of services to make your dining experience exceptional
       </p>
-      
+
       <div className="grid md:grid-cols-4 gap-8">
         {facilities.map((facility, idx) => (
-          <div key={idx} className="bg-white rounded-lg shadow-lg p-6 text-center hover:shadow-xl transition">
-            <facility.icon className="h-12 w-12 mx-auto mb-4 text-green-600" />
-            <h3 className="text-xl font-bold mb-2 text-gray-800">{facility.title}</h3>
-            <p className="text-gray-600">{facility.description}</p>
+          <div
+            key={idx}
+            className="bg-white hover:text-white  rounded-lg shadow-lg p-6 text-center hover:shadow-xl hover:bg-amber-500 transition-colors duration-300"
+          >
+            <facility.icon className="h-12 w-12 mx-auto mb-4 text-amber-500 hover:text-white" />
+            <h3 className="text-xl font-bold mb-2  ">{facility.title}</h3>
+            <p className="">{facility.description}</p>
           </div>
+
         ))}
       </div>
 
@@ -58,6 +81,8 @@ const FacilityPage = () => {
         </div>
       </div>
     </div>
+    </>
+   
   );
 };
 

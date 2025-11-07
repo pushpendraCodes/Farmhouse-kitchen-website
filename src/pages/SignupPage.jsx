@@ -1,116 +1,84 @@
-import React, { useState } from 'react';
-import { Check } from 'lucide-react';
-
-const SignupPage = () => {
-  const [formData, setFormData] = useState({ name: '', mobile: '', address: '' });
-  const [submitted, setSubmitted] = useState(false);
-  const [errors, setErrors] = useState({});
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    setErrors({ ...errors, [e.target.name]: '' });
-  };
-
-  const validate = () => {
-    const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = 'Name is required';
-    if (!formData.mobile.trim()) {
-      newErrors.mobile = 'Mobile number is required';
-    } else if (!/^\d{10}$/.test(formData.mobile)) {
-      newErrors.mobile = 'Please enter a valid 10-digit mobile number';
-    }
-    if (!formData.address.trim()) newErrors.address = 'Address is required';
-    return newErrors;
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const newErrors = validate();
-    
-    if (Object.keys(newErrors).length === 0) {
-      // Save to database (console log for demo)
-      console.log('User data saved:', formData);
-      setSubmitted(true);
-      setTimeout(() => {
-        setSubmitted(false);
-        setFormData({ name: '', mobile: '', address: '' });
-      }, 3000);
-    } else {
-      setErrors(newErrors);
-    }
-  };
-
+export default function SignupPage() {
   return (
-    <div className="max-w-2xl mx-auto px-4 py-16">
-      <div className="bg-white rounded-lg shadow-lg p-8">
-        <h1 className="text-4xl font-bold text-center mb-4 text-gray-800">Sign Up</h1>
-        <p className="text-center text-gray-600 mb-8">Join our community and enjoy exclusive benefits</p>
-        
-        {submitted ? (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
-            <Check className="h-16 w-16 mx-auto mb-4 text-green-600" />
-            <h2 className="text-2xl font-bold text-green-800 mb-2">Welcome to Farmhouse Kitchen!</h2>
-            <p className="text-green-700">Your registration was successful.</p>
+<>
+
+<section
+        id="home"
+        className="relative max-w-7xl mx-auto text-white py-32 overflow-hidden min-h-[400px]"
+        style={{
+          backgroundImage: `linear-gradient(rgba(15,23,43,.9),rgba(15,23,43,.9)), url('/hero-bg.jpg')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      >
+        <div className="container mx-auto px-4 text-center  gap-10">
+          <h1 className="text-5xl md:text-6xl font-bold mb-4 text-center leading-tight">
+         SignUp
+          </h1>
+        </div>
+      </section>
+       <section className="min-h-screen flex items-center justify-center  px-4 py-12">
+      <div className="max-w-lg w-full bg-white rounded-xl shadow-2xl p-8">
+        <h2 className="text-3xl font-bold text-amber-600 mb-2 text-center">
+          Sign Up
+        </h2>
+        <p className="text-gray-500 text-center mb-8">
+          Create your account to book a table and access exclusive features!
+        </p>
+        <form className="space-y-6">
+          {/* Name */}
+          <div>
+            <label className="block text-sm font-semibold text-amber-600 mb-2">Name</label>
+            <input
+              type="text"
+              placeholder="Enter your name"
+              className="w-full border border-amber-300 rounded-md px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-600 text-gray-800"
+              required
+            />
           </div>
-        ) : (
-          <form onSubmit={handleSubmit}>
-            <div className="mb-6">
-              <label className="block text-gray-700 font-semibold mb-2">Full Name</label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                  errors.name ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter your full name"
-              />
-              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-gray-700 font-semibold mb-2">Mobile Number</label>
-              <input
-                type="tel"
-                name="mobile"
-                value={formData.mobile}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                  errors.mobile ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter 10-digit mobile number"
-                maxLength="10"
-              />
-              {errors.mobile && <p className="text-red-500 text-sm mt-1">{errors.mobile}</p>}
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-gray-700 font-semibold mb-2">Address</label>
-              <textarea
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                rows="4"
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                  errors.address ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter your complete address"
-              />
-              {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
-            </div>
-
-            <button
-              type="submit"
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition"
-            >
-              Sign Up
-            </button>
-          </form>
-        )}
+          {/* Mobile */}
+          <div>
+            <label className="block text-sm font-semibold text-amber-600 mb-2">Mobile</label>
+            <input
+              type="tel"
+              placeholder="Enter your mobile number"
+              className="w-full border border-amber-300 rounded-md px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-600 text-gray-800"
+              required
+            />
+          </div>
+          {/* Email */}
+          <div>
+            <label className="block text-sm font-semibold text-amber-600 mb-2">Email</label>
+            <input
+              type="email"
+              placeholder="Enter your email"
+              className="w-full border border-amber-300 rounded-md px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-600 text-gray-800"
+              required
+            />
+          </div>
+          {/* Address */}
+          <div>
+            <label className="block text-sm font-semibold text-amber-600 mb-2">Address</label>
+            <textarea
+              rows={3}
+              placeholder="Enter your address"
+              className="w-full border border-amber-300 rounded-md px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-600 text-gray-800"
+              required
+            />
+          </div>
+          {/* Submit */}
+          <button
+            type="submit"
+            className="w-full py-3 bg-amber-600 hover:bg-amber-700 transition text-white font-bold rounded-md text-lg shadow-lg"
+          >
+            CREATE ACCOUNT
+          </button>
+        </form>
       </div>
-    </div>
-  );
-};
+    </section>
+</>
 
-export default SignupPage;
+   
+  );
+}

@@ -1,141 +1,121 @@
-import React, { useState } from 'react';
-import { MapPin, Phone, Mail, Clock, Check } from 'lucide-react';
+import { Mail } from "lucide-react";
 
-const ContactPage = () => {
-  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
-  const [submitted, setSubmitted] = useState(false);
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Send to backend or email service
-    console.log('Contact form submitted:', formData);
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setFormData({ name: '', email: '', message: '' });
-    }, 3000);
-  };
-
+export default function ContactUs() {
   return (
-    <div className="max-w-7xl mx-auto px-4 py-16">
-      <h1 className="text-4xl font-bold text-center mb-12 text-gray-800">Contact Us</h1>
-      
-      <div className="grid md:grid-cols-2 gap-12">
-        <div>
-          <h2 className="text-2xl font-bold mb-6 text-gray-800">Get in Touch</h2>
-          
-          {submitted ? (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-              <Check className="h-12 w-12 mb-4 text-green-600" />
-              <h3 className="text-xl font-bold text-green-800 mb-2">Message Sent!</h3>
-              <p className="text-green-700">We'll get back to you soon.</p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-gray-700 font-semibold mb-2">Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Your name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-semibold mb-2">Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="your@email.com"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-semibold mb-2">Message</label>
-                <textarea
-                  name="message"
-                  value={formData.message}
-                  onChange={handleChange}
-                  required
-                  rows="5"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Your message..."
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition"
-              >
-                Send Message
-              </button>
-            </form>
-          )}
+    <>
+      <section
+        id="home"
+        className="relative max-w-7xl mx-auto text-white py-32 overflow-hidden min-h-[400px]"
+        style={{
+          backgroundImage: `linear-gradient(rgba(15,23,43,.9),rgba(15,23,43,.9)), url('/hero-bg.jpg')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      >
+        <div className="container mx-auto px-4 text-center  gap-10">
+          <h1 className="text-5xl md:text-6xl font-bold mb-4 text-center leading-tight">
+            Contact Us
+          </h1>
         </div>
-
-        <div>
-          <h2 className="text-2xl font-bold mb-6 text-gray-800">Contact Information</h2>
-          <div className="space-y-6">
-            <div className="flex items-start">
-              <MapPin className="h-6 w-6 mr-4 text-green-600 mt-1" />
-              <div>
-                <h3 className="font-bold text-lg mb-1">Address</h3>
-                <p className="text-gray-700">Bazaz Nagar, Main Street</p>
-                <p className="text-gray-700">Indore, Madhya Pradesh</p>
-              </div>
+      </section>
+      <section className="bg-white min-h-screen px-4 py-10 flex flex-col items-center">
+        {/* Heading & Contact Types */}
+        <div className="w-full max-w-7xl mx-auto mb-10">
+          <h4 className="text-center text-lg font-bold text-amber-400 mb-2 flex items-center justify-center gap-2">
+            <span className="h-0.5 w-10 bg-amber-400 mr-3"></span>
+            Contact Us
+            <span className="h-0.5 w-10 bg-amber-400 ml-3"></span>
+          </h4>
+          <h1 className="text-center font-black text-4xl text-[#10162f] mb-10">
+            Contact For Any Query
+          </h1>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            <div className="flex flex-col items-center">
+              <h3 className="text-xl font-bold text-amber-400 mb-1 flex items-center gap-2">
+                Booking <span className="h-0.5 w-10 bg-amber-400"></span>
+              </h3>
+              <span className="flex items-center text-gray-700 font-semibold">
+                <Mail className="text-amber-400 mr-2" size={20} />
+                <span>book@example.com</span>
+              </span>
             </div>
-
-            <div className="flex items-start">
-              <Phone className="h-6 w-6 mr-4 text-green-600 mt-1" />
-              <div>
-                <h3 className="font-bold text-lg mb-1">Phone</h3>
-                <p className="text-gray-700">+91 1234567890</p>
-                <p className="text-gray-700">+91 0987654321</p>
-              </div>
+            <div className="flex flex-col items-center">
+              <h3 className="text-xl font-bold text-amber-400 mb-1 flex items-center gap-2">
+                General <span className="h-0.5 w-10 bg-amber-400"></span>
+              </h3>
+              <span className="flex items-center text-gray-700 font-semibold">
+                <Mail className="text-amber-400 mr-2" size={20} />
+                <span>info@example.com</span>
+              </span>
             </div>
-
-            <div className="flex items-start">
-              <Mail className="h-6 w-6 mr-4 text-green-600 mt-1" />
-              <div>
-                <h3 className="font-bold text-lg mb-1">Email</h3>
-                <p className="text-gray-700">info@farmhousekitchen.com</p>
-                <p className="text-gray-700">support@farmhousekitchen.com</p>
-              </div>
-            </div>
-
-            <div className="flex items-start">
-              <Clock className="h-6 w-6 mr-4 text-green-600 mt-1" />
-              <div>
-                <h3 className="font-bold text-lg mb-1">Hours</h3>
-                <p className="text-gray-700">Monday - Sunday</p>
-                <p className="text-gray-700">11:00 AM - 11:00 PM</p>
-              </div>
+            <div className="flex flex-col items-center">
+              <h3 className="text-xl font-bold text-amber-400 mb-1 flex items-center gap-2">
+                Technical <span className="h-0.5 w-10 bg-amber-400"></span>
+              </h3>
+              <span className="flex items-center text-gray-700 font-semibold">
+                <Mail className="text-amber-400 mr-2" size={20} />
+                <span>tech@example.com</span>
+              </span>
             </div>
           </div>
-
-          <div className="mt-8 bg-green-50 rounded-lg p-6">
-            <h3 className="font-bold text-lg mb-2">Visit Us</h3>
-            <p className="text-gray-700">
-              We'd love to see you at any of our three locations. Walk-ins are welcome, 
-              or you can make a reservation by calling us.
-            </p>
-          </div>
         </div>
-      </div>
-    </div>
+
+        {/* Map & Form Section */}
+        <div className="w-full max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Map */}
+          <div className="rounded-lg overflow-hidden shadow-md h-[400px] bg-gray-200">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d193571.43834501724!2d-74.11808665168164!3d40.70582539880782!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5b43c81a3%3A0xa8c90c5e6b8a8781!2sNew%20York%2C%20NY%2C%20USA!5e0!3m2!1sen!2sin!4v1633074419023!5m2!1sen!2sin"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen=""
+              loading="lazy"
+              title="New York Map"
+              referrerPolicy="no-referrer-when-downgrade"
+            ></iframe>
+          </div>
+
+          {/* Form */}
+          <form className="bg-white rounded-lg shadow-md p-8 flex flex-col gap-5 justify-center">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input
+                type="text"
+                placeholder="Your Name"
+                className="border border-gray-200 rounded px-4 py-3 w-full focus:outline-none text-gray-800"
+                required
+              />
+              <input
+                type="email"
+                placeholder="Your Email"
+                className="border border-gray-200 rounded px-4 py-3 w-full focus:outline-none text-gray-800"
+                required
+              />
+            </div>
+            <input
+              type="text"
+              placeholder="Subject"
+              className="border border-gray-200 rounded px-4 py-3 w-full focus:outline-none text-gray-800"
+              required
+            />
+            <textarea
+              rows={4}
+              placeholder="Message"
+              className="border border-gray-200 rounded px-4 py-3 w-full focus:outline-none text-gray-800"
+              required
+            />
+            <button
+              type="submit"
+              className="bg-amber-400 hover:bg-amber-500 rounded text-white font-bold text-lg py-4 w-full transition"
+            >
+              SEND MESSAGE
+            </button>
+          </form>
+        </div>
+      </section>
+    </>
+
+
   );
-};
-
-export default ContactPage;
+}
