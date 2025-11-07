@@ -1,10 +1,11 @@
 import React from 'react';
 import { Utensils, ShoppingBag, Users, ShoppingCart, Car, Wifi, CreditCard, Clock, Check } from 'lucide-react';
+import { Music } from 'lucide-react';
 
 const FacilityPage = () => {
   const facilities = [
     { icon: Utensils, title: 'Dine-In', description: 'Comfortable seating with elegant ambiance' },
-    { icon: ShoppingBag, title: 'Takeaway', description: 'Quick pickup for busy schedules' },
+    { icon: Music, title: 'DJ Flower', description: 'DJ Flower' },
     { icon: Users, title: 'Catering', description: 'Full-service catering for events' },
     { icon: ShoppingCart, title: 'Online Order', description: 'Order from home with ease' },
     { icon: Car, title: 'Free Parking', description: 'Ample parking space for guests' },
