@@ -1,44 +1,141 @@
 import React from 'react';
 import { Menu, X, Phone, MapPin, Clock, Users, Utensils, Award, ChefHat } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Play } from 'lucide-react';
-import { useState ,useEffect} from 'react';
+import { useState, useEffect } from 'react';
 import AOS from "aos";
 import "aos/dist/aos.css";
+import axios from 'axios';
 const HomePage = () => {
 
- const [people, setPeople] = useState("1");
- useEffect(() => {
+
+  useEffect(() => {
     AOS.init({
       duration: 700, // Animation duration in ms
-         // Animation only happens once when scrolling down
+      // Animation only happens once when scrolling down
       easing: "ease-out-cubic",
       offset: 50,    // Offset (px) from the original trigger point
     });
   }, []);
-  const branches = [
-    {
-      id: 1,
-      name: 'Farmhouse Kitchen Bajaj Nagar',
-      image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800',
-      description: 'Our flagship location with a premium dining experience',
-      address: 'Bazaz Nagar, Main Street'
-    },
-    {
-      id: 2,
-      name: 'Farmhouse Kitchen Butibori',
-      image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800',
-      description: 'Cozy atmosphere perfect for family gatherings',
-      address: 'Buttiburi Road, Near City Center'
-    },
-    {
-      id: 3,
-      name: 'Farmhouse Cloud Kitchen',
-      image: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?w=800',
-      description: 'Rooftop dining with panoramic city views',
-      address: 'Cloud Tower, 15th Floor'
+
+
+
+
+  const [branches, setBranches] = useState([]);
+  const [menuItems, setMenu] = useState([]);
+  // const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+
+  const [selectedBranch, setSelectedBranch] = useState("");
+  const [people, setPeople] = useState(1);
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const Navigate = useNavigate()
+  useEffect(() => {
+    fetchBranches();
+    fetchTopRatedMenu()
+  }, []);
+
+  const fetchBranches = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/branches/get-all?all=true`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to fetch branches');
+      }
+
+      setBranches(data.data || []);
+    } catch (err) {
+      console.error('Error fetching branches:', err);
+      setError(err.message || 'Failed to load branches');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+
+    const form = e.target;
+    const customerName = form[0].value.trim();
+    const customerEmail = form[1].value.trim();
+    const bookingDateTime = form[3].value;
+    const specialRequests = form[5].value.trim();
+
+    // Split datetime-local into date & time parts
+    const [bookingDate, bookingTime] = bookingDateTime.split("T");
+    const customerId = JSON.parse(localStorage.getItem("user"))?._id || null
+    try {
+      const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/api/customer/order/table-book`, {
+        customerId: customerId,
+        customerName,
+        customerPhone: "", // optional field if not collected in form
+        customerEmail,
+        branchId: selectedBranch,
+        bookingDate,
+        bookingTime,
+        numberOfGuests: Number(people),
+        specialRequests,
+      });
+
+      if (data.success) {
+        setMessage("✅ Table booking request sent successfully!");
+        form.reset();
+        setSelectedBranch("");
+        setPeople(1);
+      } else {
+        setMessage("❌ Failed to book table. Please try again.");
+      }
+    } catch (error) {
+      console.error(error);
+      setMessage(error.response?.data?.message || "Server error occurred.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const fetchTopRatedMenu = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/menus/analytics/top-rated`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to fetch branches');
+      }
+
+      setMenu(data.data || []);
+    } catch (err) {
+      console.error('Error fetching branches:', err);
+      setError(err.message || 'Failed to load branches');
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-white">
@@ -56,7 +153,7 @@ const HomePage = () => {
           backgroundRepeat: 'no-repeat',
         }}
       >
-        <div   data-aos="fade-up" className="container max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-10">
+        <div data-aos="fade-up" className="container max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-10">
           {/* Left Text Section */}
           <div className="max-w-2xl">
             <h1 className="text-5xl md:text-6xl font-bold mb-4 leading-tight">
@@ -73,7 +170,7 @@ const HomePage = () => {
             </button>
           </div>
           {/* Right Rotating Image */}
-          <div   className="relative w-72 h-72 md:w-96 md:h-96 rounded-full overflow-hidden shadow-2xl animate-slow-spin border-4 border-amber-600">
+          <div className="relative w-72 h-72 md:w-96 md:h-96 rounded-full overflow-hidden shadow-2xl animate-slow-spin border-4 border-amber-600">
             <img
               src="/hero.png"
               alt="Delicious Meal"
@@ -84,24 +181,30 @@ const HomePage = () => {
       </section>
 
 
-      <div   data-aos="fade-up" 
+      <div data-aos="fade-up"
         className="max-w-7xl mx-auto px-4 py-16">
         <h2 className="text-4xl font-bold text-center mb-12 text-gray-800">Our Branches</h2>
-        <div  className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-3 gap-8">
           {branches.map(branch => (
             <Link
               key={branch.id}
               className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition cursor-pointer transform hover:scale-105"
               to="/menus"
             >
-              <img src={branch.image} alt={branch.name} className="w-full h-48 object-cover" />
+              <img src={branch?.pictures[0]} alt={branch.name} className="w-full h-48 object-cover" />
               <div className="p-6">
                 <h3 className="text-xl font-bold mb-2 text-gray-800">{branch.name}</h3>
                 <p className="text-gray-600 mb-4">{branch.description}</p>
                 <div className="flex items-center text-amber-600">
                   <MapPin className="h-4 w-4 mr-2" />
-                  <span className="text-sm">{branch.address}</span>
+                  <span className="text-sm">
+                    {branch?.address
+                      ? `${branch.address.street || ""}, ${branch.address.city || ""}, ${branch.address.state || ""
+                      }, ${branch.address.country || ""} - ${branch.address.zipCode || ""}`
+                      : "Address not available"}
+                  </span>
                 </div>
+
               </div>
             </Link>
           ))}
@@ -110,7 +213,7 @@ const HomePage = () => {
 
 
       {/* Service Features */}
-      
+
 
       {/* About Section */}
       <section data-aos="fade-up" id="about" className="py-20 ">
@@ -162,46 +265,74 @@ const HomePage = () => {
             <h5 className="text-amber-600 font-semibold mb-2">Food Menu</h5>
             <h2 className="text-4xl font-bold">Most Popular Items</h2>
           </div>
+
           <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {[
-              { name: 'Chicken Burger', price: '$115', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=80&h=80&fit=crop' },
-              { name: 'Chicken Pizza', price: '$115', image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=80&h=80&fit=crop' },
-              { name: 'Grilled Steak', price: '$115', image: 'https://images.unsplash.com/photo-1600891964092-4316c288032e?w=80&h=80&fit=crop' },
-              { name: 'Caesar Salad', price: '$115', image: 'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=80&h=80&fit=crop' },
-              { name: 'Seafood Pasta', price: '$115', image: 'https://images.unsplash.com/photo-1563379926898-05f4575a45d8?w=80&h=80&fit=crop' },
-              { name: 'Beef Tacos', price: '$115', image: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=80&h=80&fit=crop' },
-              { name: 'Sushi Roll', price: '$115', image: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=80&h=80&fit=crop' },
-              { name: 'Thai Curry', price: '$115', image: 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=80&h=80&fit=crop' }
-            ].map((item, index) => (
-              <div key={index} className="flex items-center bg-white p-4 rounded-lg shadow-md hover:shadow-xl transition">
-                <img src={item.image} alt={item.name} className="w-20 h-20 rounded-lg object-cover mr-4" />
-                <div className="flex-1">
-                  <div className="flex justify-between items-center mb-2">
-                    <h4 className="text-lg font-bold">{item.name}</h4>
-                    <span className="text-amber-600 font-bold">{item.price}</span>
+            {menuItems.length > 0 ? (
+              menuItems.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center bg-white p-4 rounded-lg shadow-md hover:shadow-xl transition"
+                >
+                  <img
+                    src={item.pictures?.[0] || "https://via.placeholder.com/80"}
+                    alt={item.name}
+                    className="w-20 h-20 rounded-lg object-cover mr-4"
+                  />
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="text-lg font-bold">{item.name}</h4>
+                      <span className="text-amber-600 font-bold">
+                        ₹
+                        {item.discountPrice
+                          ? item.discountPrice
+                          : item.price}
+                      </span>
+                    </div>
+                    <p className="text-gray-600 text-sm">
+                      {item.description
+                        ? item.description.slice(0, 100)
+                        : "Delicious and freshly prepared meal."}
+                      {item.description && item.description.length > 100 && "..."}
+                    </p>
+
+                    {/* ✅ See More Button Link */}
+                    <Link
+                      to={`/menus`}
+                      className="text-amber-600 text-sm mt-1 inline-block font-medium hover:underline"
+                    >
+                      See More →
+                    </Link>
                   </div>
-                  <p className="text-gray-600 text-sm">Dolor et eos labore, stet justo sed est sed. Diam sed sed dolor stet amet eirmod eos labore diam</p>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-center col-span-2 text-gray-500">
+                Loading menu items...
+              </p>
+            )}
           </div>
         </div>
       </section>
 
       {/* Booking Section */}
-   <section data-aos="fade-up" className=" min-h-screen flex items-center justify-center px-4 py-12">
+      <section
+        data-aos="fade-up"
+        className="min-h-screen flex items-center justify-center px-4 py-12"
+      >
         <div className="max-w-7xl w-full mx-auto grid grid-cols-1 md:grid-cols-2 gap-0 rounded-lg overflow-hidden shadow-2xl">
-          {/* Left Side - Image & Play Button */}
+          {/* Left Side - Image */}
           <div className="relative bg-white h-[430px] md:h-auto flex items-center justify-center">
             <img
-              src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200&h=150&fit=crop"   // Change to your image path!
+              src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200&h=150&fit=crop"
               alt="Restaurant table"
               className="w-full h-full object-cover"
             />
-            {/* Play Button Overlay */}
+            {/* Play Button */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <button className="bg-amber-400 rounded-full p-0 shadow-lg flex items-center justify-center transition hover:bg-amber-500"
-                style={{ width: "100px", height: "100px" }}>
+              <button
+                className="bg-amber-400 rounded-full p-0 shadow-lg flex items-center justify-center transition hover:bg-amber-500"
+                style={{ width: "100px", height: "100px" }}
+              >
                 <Play size={50} className="text-[#10162F]" />
               </button>
             </div>
@@ -216,7 +347,8 @@ const HomePage = () => {
             <h1 className="text-white text-3xl md:text-4xl font-bold mb-8 mt-2">
               Book A Table Online
             </h1>
-            <form className="w-full space-y-5">
+
+            <form className="w-full space-y-5" onSubmit={handleSubmit}>
               {/* Name & Email */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input
@@ -232,45 +364,68 @@ const HomePage = () => {
                   required
                 />
               </div>
+
+              {/* Branch Dropdown */}
+              <select
+                className="bg-white text-[#10162F] rounded px-5 py-4 my-2 w-full font-medium outline-none"
+                value={selectedBranch}
+                onChange={(e) => setSelectedBranch(e.target.value)}
+                required
+              >
+                <option value="">Select Branch</option>
+                {branches.map((branch) => (
+                  <option key={branch._id} value={branch._id}>
+                    {branch.name} — {branch.address?.city}
+                  </option>
+                ))}
+              </select>
+
               {/* Date & People */}
               <div className="grid grid-cols-1 md:grid-cols-2 my-2 gap-4">
                 <input
                   type="datetime-local"
                   className="bg-white text-[#10162F] rounded px-5 py-4 w-full font-medium outline-none"
                   required
-                  
                 />
                 <select
                   className="bg-white text-[#10162F] rounded px-5 py-4 w-full font-medium outline-none"
                   value={people}
-                  onChange={e => setPeople(e.target.value)}
+                  onChange={(e) => setPeople(e.target.value)}
                   required
                 >
                   {[...Array(10)].map((_, i) => (
-                    <option key={i} value={i + 1}>People {i + 1}</option>
+                    <option key={i} value={i + 1}>
+                      People {i + 1}
+                    </option>
                   ))}
                 </select>
               </div>
+
               {/* Special Request */}
               <textarea
                 rows={3}
                 placeholder="Special Request"
                 className="bg-white text-[#10162F] rounded px-5 py-4 w-full font-medium outline-none"
               />
-              {/* Submit Button */}
+
+              {/* Submit */}
               <button
                 type="submit"
+                disabled={loading}
                 className="bg-amber-400 text-[#10162F] font-bold text-lg w-full rounded mt-2 py-4 transition hover:bg-amber-600"
               >
-                BOOK NOW
+                {loading ? "Booking..." : "BOOK NOW"}
               </button>
+
+              {message && (
+                <p className="text-center text-sm text-white mt-2">{message}</p>
+              )}
             </form>
           </div>
         </div>
       </section>
 
-
-<section data-aos="fade-up" className="py-16 bg-gray-50">
+      <section data-aos="fade-up" className="py-16 bg-gray-50">
         <div className="container mx-auto max-w-7xl px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="text-center p-6 bg-white rounded-lg shadow-md hover:shadow-xl transition">

@@ -52,11 +52,11 @@ export default function Footer() {
           <ul className="space-y-3">
             <li className="flex items-center gap-2">
               <MapPin size={20} className="text-amber-400" />
-              123 Street, New York, USA
+             Near Ganesh Lawn East Shankar Nagar Ramdaspeth, Bajaj Nagar, Nagpur, Maharashtra 440010
             </li>
             <li className="flex items-center gap-2">
               <Phone size={20} className="text-amber-400" />
-              +012 345 67890
+          099225 22224
             </li>
             <li className="flex items-center gap-2">
               <Mail size={20} className="text-amber-400" />
