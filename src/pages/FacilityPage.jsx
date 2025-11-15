@@ -20,7 +20,7 @@ const FacilityPage = () => {
   {/* Hero Section */}
       <section
         id="home"
-        className="relative max-w-7xl mx-auto text-white py-32 overflow-hidden min-h-[400px]"
+        className="relative max-w-7xl mx-auto text-white py-40 overflow-hidden min-h-[350px]"
         style={{
           backgroundImage: `linear-gradient(rgba(15,23,43,.9),rgba(15,23,43,.9)), url('/hero-bg.jpg')`,
           backgroundSize: 'cover',

@@ -241,7 +241,7 @@ const Navbar = () => {
                   </Link>
 
                   <Link
-                    to="/orders-history"
+                    to="/orders"
                     className="flex items-center gap-3 py-2 hover:text-amber-400 transition"
                     onClick={() => setMobileMenuOpen(false)}
                   >

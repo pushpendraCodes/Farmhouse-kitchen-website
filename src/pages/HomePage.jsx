@@ -165,9 +165,9 @@ const HomePage = () => {
               diam amet diam et eos. Clita erat ipsum et lorem et sit, sed stet
               lorem sit clita duo justo magna dolore erat amet.
             </p>
-            <button className="bg-amber-600 px-8 py-3 rounded-lg text-lg hover:bg-amber-700 transition">
+            <Link to ="/booking" className="bg-amber-600 px-8 py-3 rounded-lg text-lg hover:bg-amber-700 transition">
               BOOK A TABLE
-            </button>
+            </Link>
           </div>
           {/* Right Rotating Image */}
           <div className="relative w-72 h-72 md:w-96 md:h-96 rounded-full overflow-hidden shadow-2xl animate-slow-spin border-4 border-amber-600">

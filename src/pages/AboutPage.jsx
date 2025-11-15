@@ -8,7 +8,7 @@ const AboutPage = () => {
     {/* Hero Section */}
       <section
         id="home"
-        className="relative max-w-7xl mx-auto text-white py-32 overflow-hidden min-h-[400px]"
+        className="relative max-w-7xl mx-auto text-white py-40 overflow-hidden min-h-[350px]"
         style={{
           backgroundImage: `linear-gradient(rgba(15,23,43,.9),rgba(15,23,43,.9)), url('/hero-bg.jpg')`,
           backgroundSize: 'cover',
@@ -16,7 +16,7 @@ const AboutPage = () => {
           backgroundRepeat: 'no-repeat',
         }}
       >
-        <div className="container mx-auto px-4 text-center  gap-10">
+        <div className="container flex items-center flex-col mx-auto px-4 text-center  gap-10">
          <h1 className="text-5xl md:text-6xl font-bold mb-4 text-center leading-tight">
             About Us
             </h1>

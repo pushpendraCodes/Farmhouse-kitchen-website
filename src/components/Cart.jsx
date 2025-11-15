@@ -195,20 +195,22 @@ export default function Cart() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 px-4  ">  <section
-            className="relative max-w-7xl mx-auto text-white py-32 overflow-hidden min-h-[400px] rounded-lg"
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 px-4  "> 
+        
+         <section
+          className="relative max-w-7xl mx-auto text-white py-40 overflow-hidden min-h-[350px]"
             style={{
                 backgroundImage: `linear-gradient(rgba(15,23,43,.9),rgba(15,23,43,.9)), url('/hero-bg.jpg')`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
             }}
         >
-            <div className="mb-8 flex flex-col items-center justify-center text-center">
+            <div className="mb-8 flex flex-col items-center  justify-center text-center">
                 <h1 className="text-4xl font-bold text-white mb-2 flex items-center justify-center gap-3">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
                         <ShoppingCart className="w-6 h-6 text-white" />
                     </div>
-                    Shopping Cart
+                    Item Cart
                 </h1>
                 <p className="text-gray-300">Review your items and checkout</p>
             </div>
@@ -314,50 +316,50 @@ export default function Cart() {
                     </div>
 
                     {/* Order Summary */}
-                  {
-                    cartItems.length>0 &&   <div className="lg:col-span-1">
-                        <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-8 border border-gray-100">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-6">Order Summary</h2>
+                    {
+                        cartItems.length > 0 && <div className="lg:col-span-1">
+                            <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-8 border border-gray-100">
+                                <h2 className="text-2xl font-bold text-gray-900 mb-6">Order Summary</h2>
 
-                            <div className="space-y-4 mb-6">
-                                <div className="flex justify-between text-gray-600">
-                                    <span>Subtotal ({cartItems.length} items)</span>
-                                    <span className="font-semibold">₹{subtotal.toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between text-gray-600">
-                                    <span>Tax (5%)</span>
-                                    <span className="font-semibold">₹{tax.toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between text-gray-600">
-                                    <span>Delivery Fee</span>
-                                    <span className="font-semibold">
-                                        {deliveryFee === 0 ? <span className="text-green-600">FREE</span> : `₹${deliveryFee.toFixed(2)}`}
-                                    </span>
+                                <div className="space-y-4 mb-6">
+                                    <div className="flex justify-between text-gray-600">
+                                        <span>Subtotal ({cartItems.length} items)</span>
+                                        <span className="font-semibold">₹{subtotal.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-gray-600">
+                                        <span>Tax (5%)</span>
+                                        <span className="font-semibold">₹{tax.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-gray-600">
+                                        <span>Delivery Fee</span>
+                                        <span className="font-semibold">
+                                            {deliveryFee === 0 ? <span className="text-green-600">FREE</span> : `₹${deliveryFee.toFixed(2)}`}
+                                        </span>
+                                    </div>
+
+                                    <div className="border-t-2 border-gray-200 pt-4 flex justify-between items-center">
+                                        <span className="text-lg font-bold text-gray-900">Total</span>
+                                        <span className="text-2xl font-bold text-blue-600">₹{total.toFixed(2)}</span>
+                                    </div>
                                 </div>
 
-                                <div className="border-t-2 border-gray-200 pt-4 flex justify-between items-center">
-                                    <span className="text-lg font-bold text-gray-900">Total</span>
-                                    <span className="text-2xl font-bold text-blue-600">₹{total.toFixed(2)}</span>
+                                <button
+                                    onClick={handleCheckout}
+                                    disabled={cartItems.length === 0}
+                                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg transition-all"
+                                >
+                                    <CreditCard className="w-6 h-6" /> Proceed to Checkout
+                                </button>
+
+                                <div className="mt-6 p-4 bg-green-50 rounded-xl border border-green-200">
+                                    <p className="text-sm text-green-800 flex items-center gap-2">
+                                        <CheckCircle className="w-4 h-4" />
+                                        <span className="font-semibold">Safe & Secure Payment</span>
+                                    </p>
                                 </div>
-                            </div>
-
-                            <button
-                                onClick={handleCheckout}
-                                disabled={cartItems.length === 0}
-                                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg transition-all"
-                            >
-                                <CreditCard className="w-6 h-6" /> Proceed to Checkout
-                            </button>
-
-                            <div className="mt-6 p-4 bg-green-50 rounded-xl border border-green-200">
-                                <p className="text-sm text-green-800 flex items-center gap-2">
-                                    <CheckCircle className="w-4 h-4" />
-                                    <span className="font-semibold">Safe & Secure Payment</span>
-                                </p>
                             </div>
                         </div>
-                    </div>
-                  }
+                    }
                 </div>
             </div>
 

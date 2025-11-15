@@ -214,14 +214,14 @@ const OrdersHistoryPage = () => {
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <section
-                    className="relative max-w-7xl mx-auto text-white py-32 overflow-hidden min-h-[400px] rounded-lg"
+                    className="relative max-w-7xl mx-auto text-white py-40 overflow-hidden min-h-[350px]"
                     style={{
                         backgroundImage: `linear-gradient(rgba(15,23,43,.9),rgba(15,23,43,.9)), url('/hero-bg.jpg')`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                     }}
                 >
-                    <div className="mb-8 flex flex-col items-center justify-center text-center">
+                    <div className="mb-8 flex flex-col items-center   justify-center text-center">
                         <h1 className="text-4xl font-bold text-white mb-2 flex items-center justify-center gap-3">
                             <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
                                 <ShoppingCart className="w-6 h-6 text-white" />
