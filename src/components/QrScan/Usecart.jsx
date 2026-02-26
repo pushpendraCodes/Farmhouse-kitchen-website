@@ -44,9 +44,9 @@ const useCart = (menuItems = []) => {
   const addToCart = useCallback((item, serveType = null) => {
     const resolvedServeType =
       serveType ||
-      (Array.isArray(item.price) && item.price.length > 1
-        ? item.price[0]?.serveType
-        : null);
+      (Array.isArray(item.price) && item.price.length > 0
+        ? item.price[0]?.serveType || "full"
+        : "full");
 
     const key = makeKey(item._id, resolvedServeType);
     const unitPrice = getPriceValue(item.price, resolvedServeType);
@@ -68,9 +68,9 @@ const useCart = (menuItems = []) => {
   const removeFromCart = useCallback((item, serveType = null) => {
     const resolvedServeType =
       serveType ||
-      (Array.isArray(item.price) && item.price.length > 1
-        ? item.price[0]?.serveType
-        : null);
+      (Array.isArray(item.price) && item.price.length > 0
+        ? item.price[0]?.serveType || "regular"
+        : "regular");
 
     const key = makeKey(item._id, resolvedServeType);
 

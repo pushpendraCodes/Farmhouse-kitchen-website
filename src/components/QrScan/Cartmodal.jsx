@@ -29,6 +29,8 @@ const CartModal = ({
 }) => {
   const [specialInstructions, setSpecialInstructions] = useState("");
 
+  console.log(cart,"cart")
+
   // Build cart items from the new cart structure: { cartKey: { itemId, qty, serveType, unitPrice } }
   const cartItems = Object.entries(cart)
     .map(([cartKey, entry]) => {
@@ -203,7 +205,7 @@ const CartModal = ({
             onClick={() =>
               onPlaceOrder({
                 items: cartItems.map((i) => ({
-                  menuItem: i._id,
+                  menuId: i._id,
                   name: i.name,
                   price: i.unitPrice,
                   serveType: i.selectedServeType || null,
