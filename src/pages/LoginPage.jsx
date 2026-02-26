@@ -40,12 +40,12 @@ export default function LoginPage() {
 
         try {
             const response = await axios.post(
-                `${import.meta.env.VITE_API_URL}/api/customer/login`,
+                `${import.meta.env.VITE_API_URL}/api/customer/auth/send-otp`,
                 { phone: mobile }
             );
 
             if (response.data.success) {
-                
+
                 setMessage({ type: "success", text: `OTP sent successfully to your mobile number! otp is ${response.data.otp}` });
                 setStep(2);
                 startResendTimer();
@@ -75,7 +75,7 @@ export default function LoginPage() {
 
         try {
             const response = await axios.post(
-                `${import.meta.env.VITE_API_URL}/api/customer/login/verify`,
+                `${import.meta.env.VITE_API_URL}/api/customer/auth/verify-otp`,
                 {
                     phone: mobile,
                     otp: otp

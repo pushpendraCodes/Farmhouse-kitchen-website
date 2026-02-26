@@ -63,7 +63,7 @@ const OrdersHistoryPage = () => {
             }
 
             const res = await axios.get(
-                `${import.meta.env.VITE_API_URL}/api/customer/get-orders/${user._id}`,
+                `${import.meta.env.VITE_API_URL}/api/customer/order`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -345,10 +345,10 @@ const OrdersHistoryPage = () => {
                                                     </span>
                                                     <span
                                                         className={`px-3 py-1 rounded-full text-xs font-semibold ${order.orderType === 'delivery'
-                                                                ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                                                                : order.orderType === 'dine_in'
-                                                                    ? 'bg-purple-50 text-purple-700 border border-purple-200'
-                                                                    : 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                                                            ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                                            : order.orderType === 'dine_in'
+                                                                ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                                                                : 'bg-indigo-50 text-indigo-700 border border-indigo-200'
                                                             }`}
                                                     >
                                                         {order.orderType.replace('_', ' ').toUpperCase()}
@@ -368,7 +368,7 @@ const OrdersHistoryPage = () => {
                                                     <div className="space-y-1">
                                                         {order.items?.map((item, index) => (
                                                             <p key={index} className="text-sm text-gray-700">
-                                                                {item.quantity}x {item.menu?.name || 'Item'}
+                                                                {item.quantity}x {item.menu?.name || 'Item'} - ({item?.serveType})
                                                             </p>
                                                         ))}
                                                     </div>
@@ -405,7 +405,7 @@ const OrdersHistoryPage = () => {
                                                         Contact
                                                     </p>
                                                     <p className="text-sm text-gray-700">
-                                                        {order.customerPhone}
+                                                        {order.customer?.phone}
                                                     </p>
                                                 </div>
                                             </div>
@@ -462,10 +462,10 @@ const OrdersHistoryPage = () => {
                                                     </span>
                                                     <span
                                                         className={`px-2 py-1 rounded-full text-xs font-semibold ${order.payment?.status === 'paid'
-                                                                ? 'bg-green-100 text-green-700'
-                                                                : order.payment?.status === 'pending'
-                                                                    ? 'bg-yellow-100 text-yellow-700'
-                                                                    : 'bg-red-100 text-red-700'
+                                                            ? 'bg-green-100 text-green-700'
+                                                            : order.payment?.status === 'pending'
+                                                                ? 'bg-yellow-100 text-yellow-700'
+                                                                : 'bg-red-100 text-red-700'
                                                             }`}
                                                     >
                                                         {order.payment?.status?.toUpperCase()}
@@ -516,8 +516,8 @@ const OrdersHistoryPage = () => {
                                     onClick={() => setPage((p) => Math.max(p - 1, 1))}
                                     disabled={page === 1}
                                     className={`px-6 py-3 rounded-lg font-semibold transition-colors ${page === 1
-                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                            : 'bg-white text-green-600 border-2 border-green-600 hover:bg-green-50'
+                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                        : 'bg-white text-green-600 border-2 border-green-600 hover:bg-green-50'
                                         }`}
                                 >
                                     Previous
@@ -529,8 +529,8 @@ const OrdersHistoryPage = () => {
                                     onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
                                     disabled={page === totalPages}
                                     className={`px-6 py-3 rounded-lg font-semibold transition-colors ${page === totalPages
-                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                            : 'bg-green-600 text-white hover:bg-green-700'
+                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                        : 'bg-green-600 text-white hover:bg-green-700'
                                         }`}
                                 >
                                     Next

@@ -55,7 +55,7 @@ const MyAccountPage = () => {
       }
 
       const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/customer/getById/${userData._id}`,
+        `${import.meta.env.VITE_API_URL}/api/customer/auth/getme`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -117,7 +117,7 @@ const MyAccountPage = () => {
       const userData = JSON.parse(localStorage.getItem('user') || '{}');
 
       const res = await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/customer/update`,
+        `${import.meta.env.VITE_API_URL}/api/customer/auth/update`,
         formData,
         {
           headers: {
@@ -127,14 +127,14 @@ const MyAccountPage = () => {
       );
 
       // Update customer data
-      setCustomer(res.data);
-      
+      setCustomer(res.data.customer);
+
       // Update localStorage user data
       localStorage.setItem('user', JSON.stringify(res.data.customer));
 
       setEditMode(false);
       setSuccessMessage('Profile updated successfully!');
-      
+
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
@@ -181,25 +181,25 @@ const MyAccountPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pb-8 sm:pb-12 px-4 sm:px-6 lg:px-8">
       {/* Hero Section */}
-        <section
-                    className="relative max-w-7xl mx-auto items-center text-white  overflow-hidden min-h-[300px] md:min-h-[400px] rounded-lg"
-                    style={{
-                        backgroundImage: `linear-gradient(rgba(15,23,43,.9),rgba(15,23,43,.9)), url('/hero-bg.jpg')`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                    }}
-                >
-                    <div className="mb-8 flex flex-col items-center  mt-30 justify-center text-center">
-                        <h1 className="text-4xl font-bold text-white mb-2 flex items-center justify-center gap-3">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                                {/* <ShoppingCart className="w-6 h-6 text-white" /> */}
-                            </div>
-                           My Account
-                        </h1>
-                        <p className="text-gray-300">View Your Account Details</p>
-                    </div>
+      <section
+        className="relative max-w-7xl mx-auto items-center text-white  overflow-hidden min-h-[300px] md:min-h-[400px] rounded-lg"
+        style={{
+          backgroundImage: `linear-gradient(rgba(15,23,43,.9),rgba(15,23,43,.9)), url('/hero-bg.jpg')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="mb-8 flex flex-col items-center  mt-30 justify-center text-center">
+          <h1 className="text-4xl font-bold text-white mb-2 flex items-center justify-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+              {/* <ShoppingCart className="w-6 h-6 text-white" /> */}
+            </div>
+            My Account
+          </h1>
+          <p className="text-gray-300">View Your Account Details</p>
+        </div>
 
-                </section>
+      </section>
 
       <div className="max-w-4xl mx-auto">
         {/* Success Message */}
@@ -265,11 +265,10 @@ const MyAccountPage = () => {
               </div>
             </div>
             <span
-              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-bold text-xs sm:text-sm self-start sm:self-auto ${
-                customer?.status === 'active'
-                  ? 'bg-green-500 text-white'
-                  : 'bg-yellow-500 text-white'
-              }`}
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-bold text-xs sm:text-sm self-start sm:self-auto ${customer?.status === 'active'
+                ? 'bg-green-500 text-white'
+                : 'bg-yellow-500 text-white'
+                }`}
             >
               {customer?.status?.toUpperCase()}
             </span>

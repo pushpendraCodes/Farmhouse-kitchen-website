@@ -67,6 +67,13 @@ const HomePage = () => {
   };
 
   const handleSubmit = async (e) => {
+
+    if (!localStorage.getItem("token")) {
+      alert("Please login to book a table")
+      Navigate("/login")
+      return
+    }
+
     e.preventDefault();
     setLoading(true);
     setMessage("");
@@ -74,24 +81,31 @@ const HomePage = () => {
     const form = e.target;
     const customerName = form[0].value.trim();
     const customerEmail = form[1].value.trim();
-    const bookingDateTime = form[3].value;
-    const specialRequests = form[5].value.trim();
+    const customerPhone = form[2].value.trim();
+    const bookingDateTime = form[4].value;
+    const specialRequests = form[6].value.trim();
 
     // Split datetime-local into date & time parts
     const [bookingDate, bookingTime] = bookingDateTime.split("T");
     const customerId = JSON.parse(localStorage.getItem("user"))?._id || null
     try {
-      const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/api/customer/order/table-book`, {
+      const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/api/customer/order/table-booking`, {
         customerId: customerId,
         customerName,
-        customerPhone: "", // optional field if not collected in form
+        customerPhone,
         customerEmail,
         branchId: selectedBranch,
         bookingDate,
         bookingTime,
         numberOfGuests: Number(people),
         specialRequests,
-      });
+      },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
 
       if (data.success) {
         setMessage("✅ Table booking request sent successfully!");
@@ -165,7 +179,7 @@ const HomePage = () => {
               diam amet diam et eos. Clita erat ipsum et lorem et sit, sed stet
               lorem sit clita duo justo magna dolore erat amet.
             </p>
-            <Link to ="/booking" className="bg-amber-600 px-8 py-3 rounded-lg text-lg hover:bg-amber-700 transition">
+            <Link to="/booking" className="bg-amber-600 px-8 py-3 rounded-lg text-lg hover:bg-amber-700 transition">
               BOOK A TABLE
             </Link>
           </div>
@@ -189,7 +203,7 @@ const HomePage = () => {
             <Link
               key={branch.id}
               className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition cursor-pointer transform hover:scale-105"
-              to="/menus"
+              to={`/menus?branchId=${branch._id}`}
             >
               <img src={branch?.pictures[0]} alt={branch.name} className="w-full h-48 object-cover" />
               <div className="p-6">
@@ -279,14 +293,19 @@ const HomePage = () => {
                     className="w-20 h-20 rounded-lg object-cover mr-4"
                   />
                   <div className="flex-1">
-                    <div className="flex justify-between items-center mb-2">
+                    <div className="flex justify-between items-start mb-2">
                       <h4 className="text-lg font-bold">{item.name}</h4>
-                      <span className="text-amber-600 font-bold">
-                        ₹
-                        {item.discountPrice
-                          ? item.discountPrice
-                          : item.price}
-                      </span>
+                      <div className="flex flex-col items-end gap-0.5">
+                        {Array.isArray(item.price) ? (
+                          item.price.map((p) => (
+                            <span key={p._id} className="text-amber-600 font-bold text-sm whitespace-nowrap">
+                              {p.serveType.charAt(0).toUpperCase() + p.serveType.slice(1)}: ₹{p.price}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-amber-600 font-bold">₹{item.discountPrice || item.price}</span>
+                        )}
+                      </div>
                     </div>
                     <p className="text-gray-600 text-sm">
                       {item.description
@@ -360,6 +379,16 @@ const HomePage = () => {
                 <input
                   type="email"
                   placeholder="Your Email"
+                  className="bg-white text-[#10162F] rounded px-5 py-4 w-full font-medium outline-none"
+                  required
+                />
+              </div>
+
+              {/* Phone */}
+              <div className="grid grid-cols-1 my-2 md:grid-cols-2 gap-4">
+                <input
+                  type="tel"
+                  placeholder="Your Phone Number"
                   className="bg-white text-[#10162F] rounded px-5 py-4 w-full font-medium outline-none"
                   required
                 />

@@ -1,105 +1,198 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Leaf, Drumstick, Star, Search, SlidersHorizontal, X, Plus, Minus, ShoppingCart } from 'lucide-react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
+const API = import.meta.env.VITE_API_URL;
+
+// ─── Price helpers ──────────────────────────────────────────────────────────────
+const getPriceDisplay = (price) => {
+  if (!price) return null;
+  if (!Array.isArray(price)) {
+    return { single: parseFloat(price) || 0 };
+  }
+  if (price.length === 1) {
+    return { single: parseFloat(price[0]?.price) || 0 };
+  }
+  // multiple serve types
+  return { multi: price };
+};
+
+const getLowestPrice = (price) => {
+  if (!price) return 0;
+  if (!Array.isArray(price)) return parseFloat(price) || 0;
+  if (price.length === 0) return 0;
+  return Math.min(...price.map((p) => parseFloat(p.price) || 0));
+};
+
+// ─── Price Tag component for menu cards ─────────────────────────────────────────
+const PriceTag = ({ price, discountPrice }) => {
+  const display = getPriceDisplay(price);
+  if (!display) return <span className="font-bold text-gray-400">—</span>;
+
+  if (display.multi) {
+    return (
+      <div className="flex flex-col gap-0.5">
+        {display.multi.map((p, i) => (
+          <span key={i} className="text-sm font-bold text-green-600">
+            <span className="text-xs font-normal text-gray-400 mr-1 capitalize">{p.serveType}:</span>
+            ₹{parseFloat(p.price || 0).toFixed(0)}
+          </span>
+        ))}
+      </div>
+    );
+  }
+
+  // single price
+  return (
+    <div className="flex items-baseline gap-2">
+      <span className="font-bold text-2xl text-green-600">₹{display.single}</span>
+    </div>
+  );
+};
+
+// ─── Main Page ──────────────────────────────────────────────────────────────────
 const MenuPage = () => {
   const [menuItems, setMenuItems] = useState([]);
+  const [allItems, setAllItems] = useState([]); // unfiltered items for category extraction
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState('');
-  const [selectedType, setSelectedType] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('all'); // menuCategory _id or "all"
+  const [selectedType, setSelectedType] = useState('all'); // veg / non-veg / starter
   const [sortBy, setSortBy] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [limit] = useState(12);
-  
-  // Order Modal States
+
+  // Order Modal
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [selectedMenuItem, setSelectedMenuItem] = useState(null);
+  const [selectedServeType, setSelectedServeType] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
 
-const navigate = useNavigate()
+  const navigate = useNavigate();
 
+  const [searchParams] = useSearchParams();
+  const branchId = searchParams.get("branchId");
+
+  // ── Branches ────────────────────────────────────────────────────────────────
   useEffect(() => {
-   
     fetchBranches();
   }, []);
 
   useEffect(() => {
-    if(selectedBranch){
-    fetchMenuItems();
+    if (selectedBranch) {
+      fetchMenuItems();
     }
+  }, [page, selectedBranch, selectedCategory, selectedType, sortBy, searchTerm]);
 
-  }, [page, selectedBranch, selectedType, sortBy, searchTerm]);
+  const fetchBranches = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(
+        `${API}/api/admin/branches/get-all?all=true`,
+        { headers: { Authorization: `Bearer ${token || ""}` } }
+      );
+      const branchData = res.data.data || res.data || [];
+      setBranches(branchData);
 
-const fetchBranches = async () => {
-  try {
-    const token = localStorage.getItem("token");
-    const res = await axios.get(
-      `${import.meta.env.VITE_API_URL}/api/admin/branches/get-all?all=true`,
-      {
-        headers: { Authorization: `Bearer ${token || ""}` },
+      const mainBranch = branchData.find((b) => b.isMainBranch);
+      if (branchId) {
+        setSelectedBranch(branchId);
+      } else if (mainBranch) {
+        setSelectedBranch(mainBranch._id);
+      } else if (branchData.length > 0) {
+        setSelectedBranch(branchData[0]._id);
       }
-    );
-    const branchData = res.data.data || res.data || [];
-    setBranches(branchData);
-
-    // ✅ Only set the first branch if there is one
-   const mainBranch = branchData.find(b => b.isMainBranch);
-
-    if (mainBranch) {
-      setSelectedBranch(mainBranch._id);
-    } else if (branchData.length > 0) {
-      // fallback if no main branch is found
-      setSelectedBranch(branchData[0]._id);
+    } catch (error) {
+      console.error("Error fetching branches:", error);
     }
-  } catch (error) {
-    console.error("Error fetching branches:", error);
-  }
-};
+  };
 
-const fetchMenuItems = async () => {
-  // ✅ Don't fetch if no branch is selected
-  if (!selectedBranch) return;
+  // ── Menu Items ───────────────────────────────────────────────────────────────
+  const fetchMenuItems = async () => {
+    if (!selectedBranch) return;
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      const params = {
+        page,
+        limit,
+        search: searchTerm,
+        available: true,
+        branch: selectedBranch,
+      };
 
-  try {
-    setLoading(true);
-    const token = localStorage.getItem("token");
-    const params = {
-      page,
-      limit,
-      search: searchTerm,
-      available: true,
-      branch: selectedBranch,
-    };
+      if (selectedCategory !== "all") params.category = selectedCategory;
+      if (selectedType !== "all") params.type = selectedType;
+      if (sortBy) params.sortBy = sortBy;
 
-    if (selectedType !== "all") params.category = selectedType;
-    if (sortBy) params.sortBy = sortBy;
-
-    const res = await axios.get(
-      `${import.meta.env.VITE_API_URL}/api/admin/menus`,
-      {
+      const res = await axios.get(`${API}/api/customer/menu`, {
         headers: { Authorization: `Bearer ${token || ""}` },
         params,
+      });
+
+      const items = res.data.data || res.data.items || [];
+      setMenuItems(items);
+      setTotalPages(res.data.pagination?.pages || 1);
+
+      // On first fetch (or branch change), store ALL items for category extraction
+      if (page === 1 && selectedCategory === 'all' && selectedType === 'all' && !searchTerm) {
+        setAllItems(items);
       }
-    );
+    } catch (error) {
+      console.error("Error fetching menu items:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    setMenuItems(res.data.data || res.data.items || []);
-    setTotalPages(res.data.pagination?.pages || 1);
-  } catch (error) {
-    console.error("Error fetching menu items:", error);
-  } finally {
-    setLoading(false);
-  }
-};
+  // ── Build dynamic categories from fetched items ──────────────────────────────
+  const categories = useMemo(() => {
+    const catMap = new Map();
+    const source = allItems.length > 0 ? allItems : menuItems;
+    source.forEach((item) => {
+      const cat = item.menuCategory;
+      if (cat?._id && !catMap.has(String(cat._id))) {
+        catMap.set(String(cat._id), { _id: String(cat._id), name: cat.name || "Other" });
+      }
+    });
+    return [...catMap.values()];
+  }, [allItems, menuItems]);
 
+  // ── Type pills (veg/non-veg/starter) ──────────────────────────────────────
+  const typeFilters = [
+    { id: 'all', label: 'All Types', icon: null },
+    { id: 'veg', label: 'Vegetarian', icon: Leaf },
+    { id: 'non-veg', label: 'Non-Veg', icon: Drumstick },
+    { id: 'starter', label: 'Starters', icon: null },
+  ];
+
+  // ── Order modal ───────────────────────────────────────────────────────────
   const handleOrderNow = (item) => {
     setSelectedMenuItem(item);
     setQuantity(1);
+    // default to first serve type if array
+    if (Array.isArray(item.price) && item.price.length > 0) {
+      setSelectedServeType(item.price[0]?.serveType || null);
+    } else {
+      setSelectedServeType(null);
+    }
     setShowOrderModal(true);
+  };
+
+  const getModalUnitPrice = () => {
+    if (!selectedMenuItem) return 0;
+    const p = selectedMenuItem.price;
+    if (!Array.isArray(p)) return parseFloat(selectedMenuItem.discountPrice || p) || 0;
+    if (selectedServeType) {
+      const match = p.find((x) => x.serveType === selectedServeType);
+      if (match) return parseFloat(match.price) || 0;
+    }
+    return parseFloat(p[0]?.price) || 0;
   };
 
   const handleAddToCart = async () => {
@@ -112,56 +205,37 @@ const fetchMenuItems = async () => {
       }
 
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/customer/add-to-cart`,
+        `${API}/api/customer/cart/add-to-cart`,
         {
           menuId: selectedMenuItem._id,
           quantity,
+          ...(selectedServeType && { serveType: selectedServeType }),
         },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (response.data.success) {
-        // Optional: Save a copy in localStorage for faster UI updates
         localStorage.setItem("cart", JSON.stringify(response.data.cart));
-
-        // Close modal and show success toast/alert
         setShowOrderModal(false);
-        alert(`${quantity}x ${selectedMenuItem.name} added to cart!`);
-
-        // Navigate to Cart page
+        alert(`${quantity}x ${selectedMenuItem.name}${selectedServeType ? ` (${selectedServeType})` : ''} added to cart!`);
         navigate("/cart");
       } else {
         alert("Failed to add item to cart.");
       }
     } catch (error) {
       console.error("Add to Cart Error:", error);
-      alert(
-        error.response?.data?.message || "Something went wrong while adding to cart."
-      );
+      alert(error.response?.data?.message || "Something went wrong while adding to cart.");
     }
   };
 
-
   const resetFilters = () => {
-    setSelectedBranch('');
+    setSelectedBranch(branches.find((b) => b.isMainBranch)?._id || branches[0]?._id || '');
+    setSelectedCategory('all');
     setSelectedType('all');
     setSortBy('');
     setSearchTerm('');
     setPage(1);
   };
-
-  const categories = [
-    { id: 'all', label: 'All Items', icon: null },
-    { id: 'Veg', label: 'Vegetarian', icon: Leaf },
-    { id: 'Non-Veg', label: 'Non-Vegetarian', icon: Drumstick },
-    { id: 'Starter', label: 'Starters', icon: null },
-    // { id: 'main', label: 'Main Course', icon: null },
-    // { id: 'dessert', label: 'Desserts', icon: null },
-  ];
 
   return (
     <>
@@ -219,7 +293,6 @@ const fetchMenuItems = async () => {
                 }}
                 className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               >
-                {/* <option value="">All Branches</option> */}
                 {branches.map((branch) => (
                   <option key={branch._id} value={branch._id}>
                     {branch.name}
@@ -244,7 +317,7 @@ const fetchMenuItems = async () => {
               </select>
 
               {/* Reset Button */}
-              {(selectedBranch || selectedType !== 'all' || sortBy || searchTerm) && (
+              {(selectedCategory !== 'all' || selectedType !== 'all' || sortBy || searchTerm) && (
                 <button
                   onClick={resetFilters}
                   className="px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 flex items-center gap-2"
@@ -284,13 +357,13 @@ const fetchMenuItems = async () => {
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               >
                 <option value="">Sort By</option>
-                <option value="price_low">Price: Low to High</option>
-                <option value="price_high">Price: High to Low</option>
-                <option value="highestRated">Highest Rated</option>
-                <option value="mostPopular">Most Popular</option>
+                <option value="lowToHigh">Price: Low to High</option>
+                <option value="highToLow">Price: High to Low</option>
+                <option value="rating">Highest Rated</option>
+                <option value="popular">Most Popular</option>
               </select>
 
-              {(selectedBranch || selectedType !== 'all' || sortBy || searchTerm) && (
+              {(selectedCategory !== 'all' || selectedType !== 'all' || sortBy || searchTerm) && (
                 <button
                   onClick={resetFilters}
                   className="w-full px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 flex items-center justify-center gap-2"
@@ -307,29 +380,61 @@ const fetchMenuItems = async () => {
       {/* Menu Section */}
       <section className="py-12 bg-gray-50">
         <div className="container max-w-7xl mx-auto px-4">
-          {/* Category Tabs */}
-          <div className="flex gap-3 mb-8 overflow-x-auto pb-2">
-            {categories.map((category) => {
-              const Icon = category.icon;
+          {/* Type Tabs (veg / non-veg / starter) */}
+          <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+            {typeFilters.map((tf) => {
+              const Icon = tf.icon;
               return (
                 <button
-                  key={category.id}
+                  key={tf.id}
                   onClick={() => {
-                    setSelectedType(category.id);
+                    setSelectedType(tf.id);
                     setPage(1);
                   }}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition-all ${
-                    selectedType === category.id
-                      ? 'bg-green-600 text-white shadow-lg'
-                      : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
-                  }`}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold whitespace-nowrap transition-all text-sm ${selectedType === tf.id
+                    ? 'bg-green-600 text-white shadow-lg'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                    }`}
                 >
-                  {Icon && <Icon className="h-5 w-5" />}
-                  {category.label}
+                  {Icon && <Icon className="h-4 w-4" />}
+                  {tf.label}
                 </button>
               );
             })}
           </div>
+
+          {/* Dynamic Category Pills */}
+          {categories.length > 0 && (
+            <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
+              <button
+                onClick={() => {
+                  setSelectedCategory('all');
+                  setPage(1);
+                }}
+                className={`px-5 py-2 rounded-full font-medium whitespace-nowrap transition-all text-sm border ${selectedCategory === 'all'
+                  ? 'bg-green-100 text-green-700 border-green-300'
+                  : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                  }`}
+              >
+                All Categories
+              </button>
+              {categories.map((cat) => (
+                <button
+                  key={cat._id}
+                  onClick={() => {
+                    setSelectedCategory(cat._id);
+                    setPage(1);
+                  }}
+                  className={`px-5 py-2 rounded-full font-medium whitespace-nowrap transition-all text-sm border ${selectedCategory === cat._id
+                    ? 'bg-green-100 text-green-700 border-green-300'
+                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                    }`}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Loading State */}
           {loading ? (
@@ -356,7 +461,7 @@ const fetchMenuItems = async () => {
                     {/* Image */}
                     <div className="relative h-48 overflow-hidden">
                       <img
-                        src={item?.pictures[0] || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'}
+                        src={item?.pictures?.[0] || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'}
                         alt={item.name}
                         className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
                       />
@@ -376,7 +481,11 @@ const fetchMenuItems = async () => {
                       {item.rating && (
                         <div className="absolute top-3 right-3 bg-white px-2 py-1 rounded-full flex items-center gap-1 shadow-md">
                           <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                          <span className="text-sm font-semibold">{item.rating.average.toFixed(1)}</span>
+                          <span className="text-sm font-semibold">
+                            {typeof item.rating === 'object'
+                              ? item.rating.average?.toFixed(1)
+                              : Number(item.rating).toFixed(1)}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -390,29 +499,19 @@ const fetchMenuItems = async () => {
                         {item.description || 'Delicious and freshly prepared'}
                       </p>
 
-                      {/* Category */}
-                      {item.category && (
+                      {/* Category badge */}
+                      {item.menuCategory?.name && (
                         <span className="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full mb-3">
-                          {item.category}
+                          {item.menuCategory.name}
                         </span>
                       )}
 
                       {/* Price and Order Button */}
-                      <div className="flex items-center justify-between mt-4">
-                        <div>
-                        
-                          {item.discountPrice && (
-                            <span className="  font-bold text-2xl text-green-600">
-                              ₹{item.discountPrice}
-                            </span>
-                          )}
-                            <span className="text-sm ml-2 text-gray-400  line-through ">
-                            ₹{item.price}
-                          </span>
-                        </div>
+                      <div className="flex items-end justify-between mt-2">
+                        <PriceTag price={item.price} discountPrice={item.discountPrice} />
                         <button
                           onClick={() => handleOrderNow(item)}
-                          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 font-semibold"
+                          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 font-semibold text-sm flex-shrink-0"
                         >
                           <ShoppingCart className="h-4 w-4" />
                           Order
@@ -429,11 +528,10 @@ const fetchMenuItems = async () => {
                   <button
                     onClick={() => setPage((p) => Math.max(p - 1, 1))}
                     disabled={page === 1}
-                    className={`px-6 py-2.5 rounded-lg font-semibold ${
-                      page === 1
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white text-green-600 border-2 border-green-600 hover:bg-green-50'
-                    }`}
+                    className={`px-6 py-2.5 rounded-lg font-semibold ${page === 1
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-green-600 border-2 border-green-600 hover:bg-green-50'
+                      }`}
                   >
                     Previous
                   </button>
@@ -443,11 +541,10 @@ const fetchMenuItems = async () => {
                   <button
                     onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
                     disabled={page === totalPages}
-                    className={`px-6 py-2.5 rounded-lg font-semibold ${
-                      page === totalPages
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-green-600 text-white hover:bg-green-700'
-                    }`}
+                    className={`px-6 py-2.5 rounded-lg font-semibold ${page === totalPages
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-green-600 text-white hover:bg-green-700'
+                      }`}
                   >
                     Next
                   </button>
@@ -461,7 +558,7 @@ const fetchMenuItems = async () => {
       {/* Order Modal */}
       {showOrderModal && selectedMenuItem && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
             {/* Close Button */}
             <button
               onClick={() => setShowOrderModal(false)}
@@ -473,7 +570,7 @@ const fetchMenuItems = async () => {
             {/* Modal Content */}
             <div className="flex gap-4 mb-6">
               <img
-                src={selectedMenuItem.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200'}
+                src={selectedMenuItem.pictures?.[0] || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200'}
                 alt={selectedMenuItem.name}
                 className="w-24 h-24 object-cover rounded-lg"
               />
@@ -497,11 +594,30 @@ const fetchMenuItems = async () => {
               </div>
             </div>
 
+            {/* Serve Type Selector (for multi-price items) */}
+            {Array.isArray(selectedMenuItem.price) && selectedMenuItem.price.length > 1 && (
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Select Size</label>
+                <div className="flex gap-2 flex-wrap">
+                  {selectedMenuItem.price.map((p) => (
+                    <button
+                      key={p.serveType}
+                      onClick={() => setSelectedServeType(p.serveType)}
+                      className={`px-4 py-2 rounded-lg text-sm font-semibold border transition-all ${selectedServeType === p.serveType
+                        ? 'bg-green-600 text-white border-green-600'
+                        : 'bg-white text-gray-700 border-gray-300 hover:border-green-400'
+                        }`}
+                    >
+                      <span className="capitalize">{p.serveType}</span> — ₹{parseFloat(p.price || 0).toFixed(0)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Quantity Selector */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Quantity
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -525,7 +641,7 @@ const fetchMenuItems = async () => {
             <div className="bg-gray-50 rounded-lg p-4 mb-6">
               <div className="flex justify-between mb-2">
                 <span className="text-gray-600">Price per item</span>
-                <span className="font-semibold">₹{selectedMenuItem?.discountPrice||selectedMenuItem?.price}</span>
+                <span className="font-semibold">₹{getModalUnitPrice()}</span>
               </div>
               <div className="flex justify-between mb-2">
                 <span className="text-gray-600">Quantity</span>
@@ -535,7 +651,7 @@ const fetchMenuItems = async () => {
                 <div className="flex justify-between">
                   <span className="font-bold text-lg">Total</span>
                   <span className="font-bold text-lg text-green-600">
-                    ₹{((selectedMenuItem?.discountPrice||selectedMenuItem?.price) * quantity).toFixed(2)}
+                    ₹{(getModalUnitPrice() * quantity).toFixed(2)}
                   </span>
                 </div>
               </div>

@@ -20,8 +20,8 @@ export default function SignupPage() {
 
     try {
       // 🔹 Make API call (adjust endpoint as needed)
-      const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/api/customer/register`, {
-        fullName:name,
+      const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/api/customer/auth/register`, {
+        fullName: name,
         phone: mobile,
         email,
         address,
@@ -30,9 +30,9 @@ export default function SignupPage() {
       if (data.success) {
         setMessage("✅ Account created successfully!");
         form.reset();
-           setTimeout(() => {
-                    navigate("/login");
-                }, 1000);
+        setTimeout(() => {
+          navigate("/login");
+        }, 1000);
       } else {
         setMessage(data.message || "❌ Signup failed, please try again.");
       }
@@ -136,15 +136,15 @@ export default function SignupPage() {
               {loading ? "Creating..." : "CREATE ACCOUNT"}
             </button>
           </form>
- <p className="text-center text-gray-600 mt-6">
-          Already have an account?{" "}
-          <Link
-            to="/login"
-            className="text-amber-600 font-semibold hover:underline"
-          >
-            Login here
-          </Link>
-        </p>
+          <p className="text-center text-gray-600 mt-6">
+            Already have an account?{" "}
+            <Link
+              to="/login"
+              className="text-amber-600 font-semibold hover:underline"
+            >
+              Login here
+            </Link>
+          </p>
 
           {/* Message */}
           {message && (

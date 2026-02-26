@@ -64,14 +64,14 @@ export default function Cart() {
 
     const fetchCustomerDetails = async () => {
         try {
-            const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/customer/profile`, {
+            const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/customer/auth/getme`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (data.success) {
                 setOrderDetails(prev => ({
                     ...prev,
-                    customerName: data.customer.fullName || '',
-                    customerPhone: data.customer.phone || ''
+                    customerName: data.fullName || '',
+                    customerPhone: data.phone || ''
                 }));
             }
         } catch (err) {
@@ -79,24 +79,43 @@ export default function Cart() {
         }
     };
 
+    // Resolve the unit price from a price array + serveType
+    const resolvePrice = (priceField, serveType) => {
+        if (!priceField) return 0;
+        if (!Array.isArray(priceField)) return parseFloat(priceField) || 0;
+        if (priceField.length === 0) return 0;
+        if (serveType) {
+            const match = priceField.find(p => p.serveType?.toLowerCase() === serveType.toLowerCase());
+            if (match) return parseFloat(match.price) || 0;
+        }
+        return parseFloat(priceField[0]?.price) || 0;
+    };
+
     const fetchCart = async () => {
         try {
-            const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/customer/get-cart`, {
+            const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/customer/cart/get-cart`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (data.success) {
                 setCartItems(
-                    data.cart.map(item => ({
-                        id: item.menu._id,
-                        name: item.menu.name,
-                        price: item.menu.price,
-                        branch: item.menu.branch,
-                        discountPrice: item.menu.discountPrice,
-                        image: item.menu.pictures?.[0],
-                        quantity: item.quantity,
-                        category: item.menu.category,
+                    data.cart.map(item => {
+                        const priceArr = item.products.price;
+                        const serveType = item.serveType || null;
+                        const unitPrice = resolvePrice(priceArr, serveType);
 
-                    }))
+                        return {
+                            id: item.products._id,
+                            name: item.products.name,
+                            priceRaw: priceArr,
+                            unitPrice,
+                            serveType,
+                            branchName: item.products.branch?.name || '',
+                            branchId: item.products.branch?._id || '',
+                            image: item.products.pictures?.[0],
+                            quantity: item.quantity,
+                            category: item.products.menuCategory?.name || '',
+                        };
+                    })
                 );
             }
         } catch (err) {
@@ -133,8 +152,7 @@ export default function Cart() {
 
     const calculatePricing = () => {
         const subtotal = cartItems.reduce((sum, item) => {
-            const itemPrice = item.discountPrice || item.price;
-            return sum + itemPrice * item.quantity;
+            return sum + item.unitPrice * item.quantity;
         }, 0);
         const tax = subtotal * 0.05;
         const deliveryFee = orderDetails.orderType === 'delivery' ? 50 : 0;
@@ -155,24 +173,22 @@ export default function Cart() {
         setLoading(true);
         try {
             const orderData = {
-                // orderType: orderDetails.orderType,
                 customerId: customerId || undefined,
                 customerName: orderDetails.customerName,
                 customerPhone: orderDetails.customerPhone,
-                branchId: cartItems[0].branch || '674cb9bc29d31a31a8daa47d', // Use actual branch ID
+                branchId: cartItems[0]?.branchId || '',
                 items: cartItems.map(item => ({
                     menuId: item.id,
-                    quantity: item.quantity
+                    quantity: item.quantity,
+                    serveType: item.serveType || undefined,
                 })),
                 paymentMethod: paymentMethod,
                 deliveryAddress: orderDetails.deliveryAddress,
-                // tableNumber: orderDetails.orderType === 'dine_in' ? orderDetails.tableNumber : undefined,
-                // deliveryFee: deliveryFee
                 specialInstructions: orderDetails.specialInstruction || ""
             };
 
             const { data } = await axios.post(
-                `${import.meta.env.VITE_API_URL}/api/customer/order/delivery-book`,
+                `${import.meta.env.VITE_API_URL}/api/customer/order/delivery`,
                 orderData,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -195,27 +211,27 @@ export default function Cart() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 px-4  "> 
-        
-         <section
-          className="relative max-w-7xl mx-auto text-white py-40 overflow-hidden min-h-[350px]"
-            style={{
-                backgroundImage: `linear-gradient(rgba(15,23,43,.9),rgba(15,23,43,.9)), url('/hero-bg.jpg')`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-            }}
-        >
-            <div className="mb-8 flex flex-col items-center  justify-center text-center">
-                <h1 className="text-4xl font-bold text-white mb-2 flex items-center justify-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                        <ShoppingCart className="w-6 h-6 text-white" />
-                    </div>
-                    Item Cart
-                </h1>
-                <p className="text-gray-300">Review your items and checkout</p>
-            </div>
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 px-4  ">
 
-        </section>
+            <section
+                className="relative max-w-7xl mx-auto text-white py-40 overflow-hidden min-h-[350px]"
+                style={{
+                    backgroundImage: `linear-gradient(rgba(15,23,43,.9),rgba(15,23,43,.9)), url('/hero-bg.jpg')`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                }}
+            >
+                <div className="mb-8 flex flex-col items-center  justify-center text-center">
+                    <h1 className="text-4xl font-bold text-white mb-2 flex items-center justify-center gap-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                            <ShoppingCart className="w-6 h-6 text-white" />
+                        </div>
+                        Item Cart
+                    </h1>
+                    <p className="text-gray-300">Review your items and checkout</p>
+                </div>
+
+            </section>
 
 
 
@@ -238,7 +254,7 @@ export default function Cart() {
                             ) : (
                                 <div className="divide-y divide-gray-100">
                                     {cartItems.map(item => (
-                                        <div key={item.id} className="p-6 hover:bg-gray-50 transition-colors">
+                                        <div key={`${item.id}_${item.serveType || ''}`} className="p-6 hover:bg-gray-50 transition-colors">
                                             <div className="flex gap-6">
                                                 {/* Product Image */}
                                                 <div className="relative">
@@ -247,11 +263,6 @@ export default function Cart() {
                                                         alt={item.name}
                                                         className="w-28 h-28 object-cover rounded-xl shadow-md"
                                                     />
-                                                    {item.discountPrice && (
-                                                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                                                            {Math.round(((item.price - item.discountPrice) / item.price) * 100)}% OFF
-                                                        </span>
-                                                    )}
                                                 </div>
 
                                                 {/* Product Details */}
@@ -259,9 +270,18 @@ export default function Cart() {
                                                     <div className="flex items-start justify-between mb-2">
                                                         <div>
                                                             <h3 className="font-bold text-lg text-gray-900">{item.name}</h3>
-                                                            <span className="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full mt-1">
-                                                                {item.category}
-                                                            </span>
+                                                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                                                {item.category && (
+                                                                    <span className="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                                                                        {item.category}
+                                                                    </span>
+                                                                )}
+                                                                {item.serveType && (
+                                                                    <span className="inline-block px-2 py-1 bg-blue-50 text-blue-600 text-xs rounded-full font-medium capitalize">
+                                                                        {item.serveType}
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                         <button
                                                             onClick={() => removeItem(item.id)}
@@ -272,14 +292,7 @@ export default function Cart() {
                                                     </div>
 
                                                     <div className="flex items-center gap-2 mb-4">
-                                                        {item.discountPrice ? (
-                                                            <>
-                                                                <span className="text-2xl font-bold text-gray-900">₹{item.discountPrice}</span>
-                                                                <span className="text-lg text-gray-400 line-through">₹{item.price}</span>
-                                                            </>
-                                                        ) : (
-                                                            <span className="text-2xl font-bold text-gray-900">₹{item.price}</span>
-                                                        )}
+                                                        <span className="text-2xl font-bold text-gray-900">₹{item.unitPrice.toFixed(2)}</span>
                                                     </div>
 
                                                     {/* Quantity Controls */}
@@ -302,7 +315,7 @@ export default function Cart() {
                                                         <div className="text-right">
                                                             <p className="text-sm text-gray-500">Subtotal</p>
                                                             <p className="font-bold text-xl text-gray-900">
-                                                                ₹{((item.discountPrice || item.price) * item.quantity).toFixed(2)}
+                                                                ₹{(item.unitPrice * item.quantity).toFixed(2)}
                                                             </p>
                                                         </div>
                                                     </div>

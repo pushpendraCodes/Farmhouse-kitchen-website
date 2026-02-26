@@ -1,5 +1,12 @@
-import React, { useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useSearchParams,
+  useNavigate,
+} from "react-router-dom";
+
 import Topbar from "./components/Topbar";
 import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
@@ -15,25 +22,45 @@ import Cart from "./components/Cart";
 import OrdersHistoryPage from "./pages/OrdersHistoryPage";
 import MyAccountPage from "./pages/MyAccountPage";
 import ScrollToTop from "./helper/ScrollToTop";
+import CustomerMenuModal from "./components/QrScan/Customermenumodal";
 
+function AppContent() {
+  const [searchParams] = useSearchParams();
+  const [showMenu, setShowMenu] = useState(false);
 
-export default function App() {
+  const branchId = searchParams.get("branch");
+  const qrToken = searchParams.get("table");
 
+  useEffect(() => {
+    if (branchId && qrToken) {
+      setShowMenu(true);
+    }
+  }, [branchId, qrToken]);
+
+  const Navigate = useNavigate()
 
   return (
-    <Router className="">
-      
+    <>
+      {/* Modal */}
+      {branchId && qrToken && (
+        <CustomerMenuModal
+          isOpen={showMenu}
+          branchId={branchId}
+          qrToken={qrToken}
+          onClose={() => {
+            setShowMenu(false)
+            Navigate("/")
+           window.location.reload();
+
+          }}
+        />
+      )}
 
       <div className="flex flex-col min-h-screen">
-        {/* Topbar */}
-        {/* <Topbar /> */}
-
-        {/* Navbar */}
         <Navbar />
 
-        {/* Page Content */}
         <main className="grow">
-            <ScrollToTop />
+          <ScrollToTop />
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
@@ -46,13 +73,19 @@ export default function App() {
             <Route path="/cart" element={<Cart />} />
             <Route path="/orders" element={<OrdersHistoryPage />} />
             <Route path="/my-account" element={<MyAccountPage />} />
-          
           </Routes>
         </main>
 
-        {/* Footer */}
         <Footer />
       </div>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }
