@@ -3,7 +3,7 @@ import axios from 'axios';
 import {
     Trash2, Plus, Minus, ShoppingCart, CreditCard, X,
     Smartphone, QrCode, Wallet, CheckCircle, ArrowLeft,
-    Package, MapPin, Clock, Phone, User, Home
+    Package, MapPin, Clock, Phone, User, Home, Tag
 } from 'lucide-react';
 
 export default function Cart() {
@@ -12,6 +12,13 @@ export default function Cart() {
     const [paymentMethod, setPaymentMethod] = useState('');
     const [paymentStep, setPaymentStep] = useState(1); // 1: Details, 2: Payment, 3: Confirmation
     const [loading, setLoading] = useState(false);
+
+    // Offers
+    const [menuOffers, setMenuOffers] = useState({}); // { menuItemId: offer }
+    const [offerCode, setOfferCode] = useState('');
+    const [appliedOffer, setAppliedOffer] = useState(null); // validated offer response data
+    const [offerError, setOfferError] = useState('');
+    const [offerLoading, setOfferLoading] = useState(false);
     const [orderDetails, setOrderDetails] = useState({
         orderType: 'delivery',
         customerName: '',
@@ -117,6 +124,25 @@ export default function Cart() {
                         };
                     })
                 );
+
+                // Fetch active offers for each cart item
+                const items = data.cart || [];
+                items.forEach(async (item) => {
+                    try {
+                        const offerRes = await fetch(
+                            `${import.meta.env.VITE_API_URL}/api/customer/offer/menu-item/${item.products._id}/active`
+                        );
+                        const offerData = await offerRes.json();
+                        if (offerRes.ok && offerData.data) {
+                            const activeOffer = Array.isArray(offerData.data) ? offerData.data[0] : offerData.data;
+                            if (activeOffer) {
+                                setMenuOffers(prev => ({ ...prev, [item.products._id]: activeOffer }));
+                            }
+                        }
+                    } catch (e) {
+                        // silently ignore
+                    }
+                });
             }
         } catch (err) {
             console.error("Error fetching cart:", err);
@@ -127,7 +153,7 @@ export default function Cart() {
         if (newQuantity < 1) return;
         try {
             const { data } = await axios.post(
-                `${import.meta.env.VITE_API_URL}/api/customer/update-cart-quantity`,
+                `${import.meta.env.VITE_API_URL}/api/customer/cart/update-cart-quantity`,
                 { menuId, quantity: newQuantity },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -140,7 +166,7 @@ export default function Cart() {
     const removeItem = async (menuId) => {
         try {
             const { data } = await axios.post(
-                `${import.meta.env.VITE_API_URL}/api/customer/remove-item-cart`,
+                `${import.meta.env.VITE_API_URL}/api/customer/cart/remove-item-cart`,
                 { menuId },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -150,18 +176,53 @@ export default function Cart() {
         }
     };
 
+    const handleApplyOffer = async (code) => {
+        setOfferLoading(true);
+        setOfferError('');
+        setAppliedOffer(null);
+        try {
+            const { data } = await axios.post(
+                `${import.meta.env.VITE_API_URL}/api/customer/offer/validate`,
+                {
+                    offerCode: code,
+                    branchId: cartItems[0]?.branchId || '',
+                    cartItems: cartItems.map(item => ({
+                        menuItemId: item.id,
+                        unitPrice: item.unitPrice,
+                        quantity: item.quantity,
+                    })),
+                },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (data.success) {
+                setAppliedOffer(data.data);
+            } else {
+                alert(data.message || 'Invalid offer');
+            }
+        } catch (err) {
+            alert(err.response?.data?.message || 'Failed to apply offer');
+        } finally {
+            setOfferLoading(false);
+        }
+    };
+
+    const handleRemoveOffer = () => {
+        setAppliedOffer(null);
+    };
+
     const calculatePricing = () => {
         const subtotal = cartItems.reduce((sum, item) => {
             return sum + item.unitPrice * item.quantity;
         }, 0);
-        const tax = subtotal * 0.05;
+        const discount = appliedOffer ? appliedOffer.discountAmount : 0;
+        const tax = (subtotal - discount) * 0.05;
         const deliveryFee = orderDetails.orderType === 'delivery' ? 50 : 0;
-        const total = subtotal + tax + deliveryFee;
+        const total = subtotal - discount + tax + deliveryFee;
 
-        return { subtotal, tax, deliveryFee, total };
+        return { subtotal, discount, tax, deliveryFee, total };
     };
 
-    const { subtotal, tax, deliveryFee, total } = calculatePricing();
+    const { subtotal, discount, tax, deliveryFee, total } = calculatePricing();
 
     const handleCheckout = () => {
         if (cartItems.length === 0) return;
@@ -184,7 +245,8 @@ export default function Cart() {
                 })),
                 paymentMethod: paymentMethod,
                 deliveryAddress: orderDetails.deliveryAddress,
-                specialInstructions: orderDetails.specialInstruction || ""
+                specialInstructions: orderDetails.specialInstruction || "",
+                ...(appliedOffer && { offerCode: appliedOffer.offerCode }),
             };
 
             const { data } = await axios.post(
@@ -281,6 +343,35 @@ export default function Cart() {
                                                                         {item.serveType}
                                                                     </span>
                                                                 )}
+                                                                {menuOffers[item.id] && (
+                                                                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-50 text-red-600 text-xs rounded-full font-semibold">
+                                                                        <Tag className="h-3 w-3" />
+                                                                        {menuOffers[item.id].title}
+                                                                        {menuOffers[item.id].discount?.type === 'PERCENTAGE'
+                                                                            ? ` — ${menuOffers[item.id].discount.percentageOff}% OFF`
+                                                                            : menuOffers[item.id].discount?.type === 'FLAT'
+                                                                                ? ` — ₹${menuOffers[item.id].discount.flatAmount} OFF`
+                                                                                : ''}
+                                                                    </span>
+                                                                )}
+                                                                {menuOffers[item.id] && (
+                                                                    appliedOffer?.offerCode === menuOffers[item.id].offerCode ? (
+                                                                        <button
+                                                                            onClick={handleRemoveOffer}
+                                                                            className="px-2.5 py-1 bg-green-100 text-green-700 text-xs rounded-full font-bold hover:bg-red-100 hover:text-red-600 transition-colors"
+                                                                        >
+                                                                            ✓ Applied
+                                                                        </button>
+                                                                    ) : (
+                                                                        <button
+                                                                            onClick={() => handleApplyOffer(menuOffers[item.id].offerCode)}
+                                                                            disabled={offerLoading}
+                                                                            className="px-2.5 py-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full font-bold hover:from-red-600 hover:to-pink-600 disabled:opacity-50 transition-all"
+                                                                        >
+                                                                            {offerLoading ? '...' : 'Apply'}
+                                                                        </button>
+                                                                    )
+                                                                )}
                                                             </div>
                                                         </div>
                                                         <button
@@ -334,11 +425,38 @@ export default function Cart() {
                             <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-8 border border-gray-100">
                                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Order Summary</h2>
 
+                                {/* Applied Offer Display */}
+                                {appliedOffer && (
+                                    <div className="mb-6 flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <Tag className="w-4 h-4 text-green-600" />
+                                                <span className="font-bold text-green-700">{appliedOffer.offerCode}</span>
+                                            </div>
+                                            <p className="text-xs text-green-600 mt-0.5">{appliedOffer.title} — ₹{appliedOffer.discountAmount} off</p>
+                                        </div>
+                                        <button
+                                            onClick={handleRemoveOffer}
+                                            className="text-red-500 hover:text-red-700 text-sm font-semibold"
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
+                                )}
+
                                 <div className="space-y-4 mb-6">
                                     <div className="flex justify-between text-gray-600">
                                         <span>Subtotal ({cartItems.length} items)</span>
                                         <span className="font-semibold">₹{subtotal.toFixed(2)}</span>
                                     </div>
+                                    {discount > 0 && (
+                                        <div className="flex justify-between text-green-600">
+                                            <span className="flex items-center gap-1">
+                                                <Tag className="w-3.5 h-3.5" /> Discount
+                                            </span>
+                                            <span className="font-semibold">-₹{discount.toFixed(2)}</span>
+                                        </div>
+                                    )}
                                     <div className="flex justify-between text-gray-600">
                                         <span>Tax (5%)</span>
                                         <span className="font-semibold">₹{tax.toFixed(2)}</span>
@@ -515,6 +633,12 @@ export default function Cart() {
                                                 <span className="text-gray-600">Subtotal</span>
                                                 <span className="font-semibold">₹{subtotal.toFixed(2)}</span>
                                             </div>
+                                            {discount > 0 && (
+                                                <div className="flex justify-between text-green-600">
+                                                    <span className="flex items-center gap-1"><Tag className="w-3 h-3" /> Discount</span>
+                                                    <span className="font-semibold">-₹{discount.toFixed(2)}</span>
+                                                </div>
+                                            )}
                                             <div className="flex justify-between">
                                                 <span className="text-gray-600">Tax (5%)</span>
                                                 <span className="font-semibold">₹{tax.toFixed(2)}</span>
@@ -575,6 +699,7 @@ export default function Cart() {
                                                 <p className="mt-4 font-bold text-gray-900">Scan QR Code to Pay</p>
                                                 <p className="text-sm text-gray-600 mt-1">Use any UPI app to complete payment</p>
                                                 <p className="text-2xl font-bold text-purple-600 mt-3">₹{total.toFixed(2)}</p>
+                                                {discount > 0 && <p className="text-sm text-green-600 mt-1">Discount applied: -₹{discount.toFixed(2)}</p>}
                                             </div>
                                         </div>
                                     )}
@@ -618,6 +743,7 @@ export default function Cart() {
                                     <div className="bg-gray-50 rounded-xl p-6 mb-6">
                                         <p className="text-sm text-gray-600 mb-2">Order Total</p>
                                         <p className="text-4xl font-bold text-green-600">₹{total.toFixed(2)}</p>
+                                        {discount > 0 && <p className="text-sm text-green-500 mt-1">You saved ₹{discount.toFixed(2)}!</p>}
                                     </div>
                                     <p className="text-sm text-gray-500">Redirecting to home page...</p>
                                 </div>

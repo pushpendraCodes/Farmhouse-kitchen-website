@@ -23,8 +23,10 @@ import OrdersHistoryPage from "./pages/OrdersHistoryPage";
 import MyAccountPage from "./pages/MyAccountPage";
 import ScrollToTop from "./helper/ScrollToTop";
 import CustomerMenuModal from "./components/QrScan/Customermenumodal";
+import useAutoLogout from "./helper/useAutoLogout";
 
 function AppContent() {
+  useAutoLogout();
   const [searchParams] = useSearchParams();
   const [showMenu, setShowMenu] = useState(false);
 

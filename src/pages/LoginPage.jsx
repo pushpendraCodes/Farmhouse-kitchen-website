@@ -89,12 +89,11 @@ export default function LoginPage() {
                 localStorage.setItem("cart", JSON.stringify(response.data.customer.carts));
 
 
-                setMessage({ type: "success", text: "Login successful! Redirecting..." });
+                // Store login timestamp for auto-logout (7 days)
+                localStorage.setItem("loginTime", Date.now().toString());
 
-                // Redirect to dashboard after 1 second
-                setTimeout(() => {
-                    navigate("/");
-                }, 1000);
+                setMessage({ type: "success", text: "Login successful! Redirecting..." });
+                setTimeout(() => navigate("/"), 1000);
             }
         } catch (error) {
             console.error("Verify OTP Error:", error);

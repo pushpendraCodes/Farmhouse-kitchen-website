@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, X, Phone, MapPin, Clock, Users, Utensils, Award, ChefHat } from 'lucide-react';
+import { Menu, X, Phone, MapPin, Clock, Users, Utensils, Award, ChefHat, Tag } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Play } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -25,6 +25,8 @@ const HomePage = () => {
   const [menuItems, setMenu] = useState([]);
   // const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [branchOffers, setBranchOffers] = useState({}); // { branchId: offer }
+  const [menuOffers, setMenuOffers] = useState({}); // { menuItemId: offer }
 
 
   const [selectedBranch, setSelectedBranch] = useState("");
@@ -57,7 +59,26 @@ const HomePage = () => {
         throw new Error(data.message || 'Failed to fetch branches');
       }
 
-      setBranches(data.data || []);
+      const branchList = data.data || [];
+      setBranches(branchList);
+
+      // Fetch active offers for each branch
+      branchList.forEach(async (branch) => {
+        try {
+          const offerRes = await fetch(
+            `${import.meta.env.VITE_API_URL}/api/customer/offer/branch/${branch._id}/active`
+          );
+          const offerData = await offerRes.json();
+          if (offerRes.ok && offerData.data) {
+            const activeOffer = Array.isArray(offerData.data) ? offerData.data[0] : offerData.data;
+            if (activeOffer) {
+              setBranchOffers(prev => ({ ...prev, [branch._id]: activeOffer }));
+            }
+          }
+        } catch (e) {
+          // silently ignore offer fetch errors
+        }
+      });
     } catch (err) {
       console.error('Error fetching branches:', err);
       setError(err.message || 'Failed to load branches');
@@ -138,13 +159,32 @@ const HomePage = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch branches');
+        throw new Error(data.message || 'Failed to fetch menu');
       }
 
-      setMenu(data.data || []);
+      const items = data.data || [];
+      setMenu(items);
+
+      // Fetch active offers for each menu item
+      items.forEach(async (item) => {
+        try {
+          const offerRes = await fetch(
+            `${import.meta.env.VITE_API_URL}/api/customer/offer/menu-item/${item._id}/active`
+          );
+          const offerData = await offerRes.json();
+          if (offerRes.ok && offerData.data) {
+            const activeOffer = Array.isArray(offerData.data) ? offerData.data[0] : offerData.data;
+            if (activeOffer) {
+              setMenuOffers(prev => ({ ...prev, [item._id]: activeOffer }));
+            }
+          }
+        } catch (e) {
+          // silently ignore offer fetch errors
+        }
+      });
     } catch (err) {
-      console.error('Error fetching branches:', err);
-      setError(err.message || 'Failed to load branches');
+      console.error('Error fetching menu:', err);
+      setError(err.message || 'Failed to load menu');
     } finally {
       setLoading(false);
     }
@@ -205,7 +245,20 @@ const HomePage = () => {
               className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition cursor-pointer transform hover:scale-105"
               to={`/menus?branchId=${branch._id}`}
             >
-              <img src={branch?.pictures[0]} alt={branch.name} className="w-full h-48 object-cover" />
+              <div className="relative">
+                <img src={branch?.pictures[0]} alt={branch.name} className="w-full h-48 object-cover" />
+                {branchOffers[branch._id] && (
+                  <div className="absolute top-3 left-3 bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg animate-pulse">
+                    <Tag className="h-3 w-3" />
+                    {branchOffers[branch._id].title}
+                    {branchOffers[branch._id].discount?.type === 'PERCENTAGE'
+                      ? ` - ${branchOffers[branch._id].discount.percentageOff}% OFF`
+                      : branchOffers[branch._id].discount?.type === 'FLAT'
+                        ? ` - ₹${branchOffers[branch._id].discount.flatAmount} OFF`
+                        : ''}
+                  </div>
+                )}
+              </div>
               <div className="p-6">
                 <h3 className="text-xl font-bold mb-2 text-gray-800">{branch.name}</h3>
                 <p className="text-gray-600 mb-4">{branch.description}</p>
@@ -218,7 +271,6 @@ const HomePage = () => {
                       : "Address not available"}
                   </span>
                 </div>
-
               </div>
             </Link>
           ))}
@@ -287,11 +339,20 @@ const HomePage = () => {
                   key={index}
                   className="flex items-center bg-white p-4 rounded-lg shadow-md hover:shadow-xl transition"
                 >
-                  <img
-                    src={item.pictures?.[0] || "https://via.placeholder.com/80"}
-                    alt={item.name}
-                    className="w-20 h-20 rounded-lg object-cover mr-4"
-                  />
+                  <div className="relative mr-4">
+                    <img
+                      src={item.pictures?.[0] || "https://via.placeholder.com/80"}
+                      alt={item.name}
+                      className="w-20 h-20 rounded-lg object-cover"
+                    />
+                    {menuOffers[item._id] && (
+                      <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow">
+                        {menuOffers[item._id].discount?.type === 'PERCENTAGE'
+                          ? `${menuOffers[item._id].discount.percentageOff}%`
+                          : `₹${menuOffers[item._id].discount?.flatAmount}`}
+                      </div>
+                    )}
+                  </div>
                   <div className="flex-1">
                     <div className="flex justify-between items-start mb-2">
                       <h4 className="text-lg font-bold">{item.name}</h4>
@@ -313,6 +374,13 @@ const HomePage = () => {
                         : "Delicious and freshly prepared meal."}
                       {item.description && item.description.length > 100 && "..."}
                     </p>
+
+                    {menuOffers[item._id] && (
+                      <span className="inline-flex items-center gap-1 bg-red-50 text-red-600 text-xs font-semibold px-2 py-0.5 rounded-full mt-1">
+                        <Tag className="h-3 w-3" />
+                        {menuOffers[item._id].title}
+                      </span>
+                    )}
 
                     {/* ✅ See More Button Link */}
                     <Link

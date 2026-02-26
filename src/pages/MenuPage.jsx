@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Leaf, Drumstick, Star, Search, SlidersHorizontal, X, Plus, Minus, ShoppingCart } from 'lucide-react';
+import { Leaf, Drumstick, Star, Search, SlidersHorizontal, X, Plus, Minus, ShoppingCart, Tag } from 'lucide-react';
 import axios from 'axios';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
@@ -55,6 +55,7 @@ const PriceTag = ({ price, discountPrice }) => {
 const MenuPage = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [allItems, setAllItems] = useState([]); // unfiltered items for category extraction
+  const [menuOffers, setMenuOffers] = useState({}); // { menuItemId: offer }
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState('');
@@ -143,6 +144,24 @@ const MenuPage = () => {
       if (page === 1 && selectedCategory === 'all' && selectedType === 'all' && !searchTerm) {
         setAllItems(items);
       }
+
+      // Fetch active offers for each menu item
+      items.forEach(async (item) => {
+        try {
+          const offerRes = await fetch(
+            `${API}/api/customer/offer/menu-item/${item._id}/active`
+          );
+          const offerData = await offerRes.json();
+          if (offerRes.ok && offerData.data) {
+            const activeOffer = Array.isArray(offerData.data) ? offerData.data[0] : offerData.data;
+            if (activeOffer) {
+              setMenuOffers(prev => ({ ...prev, [item._id]: activeOffer }));
+            }
+          }
+        } catch (e) {
+          // silently ignore offer fetch errors
+        }
+      });
     } catch (error) {
       console.error("Error fetching menu items:", error);
     } finally {
@@ -486,6 +505,18 @@ const MenuPage = () => {
                               ? item.rating.average?.toFixed(1)
                               : Number(item.rating).toFixed(1)}
                           </span>
+                        </div>
+                      )}
+                      {/* Offer Badge */}
+                      {menuOffers[item._id] && (
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1.5 text-xs font-bold flex items-center gap-1">
+                          <Tag className="h-3 w-3" />
+                          {menuOffers[item._id].title}
+                          {menuOffers[item._id].discount?.type === 'PERCENTAGE'
+                            ? ` — ${menuOffers[item._id].discount.percentageOff}% OFF`
+                            : menuOffers[item._id].discount?.type === 'FLAT'
+                              ? ` — ₹${menuOffers[item._id].discount.flatAmount} OFF`
+                              : ''}
                         </div>
                       )}
                     </div>
