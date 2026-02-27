@@ -441,6 +441,16 @@ const OrdersHistoryPage = () => {
                                                             </p>
                                                         </div>
                                                     )}
+                                                    {order.pricing?.discount > 0 && (
+                                                        <div>
+                                                            <p className="text-green-600 font-medium mb-1">
+Discount
+                                                            </p>
+                                                            <p className="text-green-900 font-bold">
+                                                                {formatCurrency(order.pricing.discount)}
+                                                            </p>
+                                                        </div>
+                                                    )}
                                                     <div>
                                                         <p className="text-green-600 font-medium mb-1 flex items-center gap-1">
                                                             <DollarSign className="h-4 w-4" />

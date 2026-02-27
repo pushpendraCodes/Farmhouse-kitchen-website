@@ -1,7 +1,9 @@
 // components/menu/MenuItemCard.jsx
 import React, { useState } from "react";
 import { FiPlus, FiMinus, FiClock } from "react-icons/fi";
+import OfferBadge from "./Offerbadge";
 // import { getPriceValue } from "./Usecart";
+
 
 // ─── Type badge (replaces old isVeg boolean) ─────────────────────────────────
 const TypeBadge = ({ type }) => {
@@ -43,8 +45,10 @@ const PriceTag = ({ price }) => {
 };
 
 // ─── Card ─────────────────────────────────────────────────────────────────────
-const MenuItemCard = ({ item, quantity, onAdd, onRemove }) => {
+const MenuItemCard = ({ item, quantity, onAdd, onRemove, offer }) => {
   const [imgError, setImgError] = useState(false);
+
+  console.log(offer);
 
   // Schema field: `available` (Boolean)
   const isAvailable = item.available !== false;
@@ -54,9 +58,8 @@ const MenuItemCard = ({ item, quantity, onAdd, onRemove }) => {
 
   return (
     <div
-      className={`bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${
-        !isAvailable ? "opacity-50 pointer-events-none" : ""
-      }`}
+      className={`bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${!isAvailable ? "opacity-50 pointer-events-none" : ""
+        }`}
     >
       {/* Image — full width on top */}
       {mainImage && !imgError && (
@@ -83,7 +86,11 @@ const MenuItemCard = ({ item, quantity, onAdd, onRemove }) => {
           <TypeBadge type={item.type} />
           <span className="text-[10px] text-gray-400 capitalize">{item.type}</span>
         </div>
-
+        {offer && offer.length > 0 && (
+          <div className="mt-1 mb-1.5">
+            <OfferBadge offers={offer} />
+          </div>
+        )}
         <h3 className="font-semibold text-gray-900 text-sm leading-tight mb-1">
           {item.name}
         </h3>
@@ -104,6 +111,7 @@ const MenuItemCard = ({ item, quantity, onAdd, onRemove }) => {
               </span>
             )}
           </div>
+
 
           {/* Add / Quantity stepper */}
           {!isAvailable ? (

@@ -18,6 +18,7 @@ import { LoadingScreen, ErrorScreen } from "./Screens";
 import useMenuData from "./Usemenudata"
 import useCart from "./Usecart";
 import useAuth from "./Useauth";
+import useOffers from "./useOffers";
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 // ─── Menu Body ────────────────────────────────────────────────────────────────
@@ -25,6 +26,7 @@ const MenuBody = ({ branchInfo, tableInfo, menuItems, categories, onClose }) => 
   const { user, token, isLoggedIn, saveGuestSession } = useAuth();
   const { cart, addToCart, removeFromCart, updateCartQty, removeCartItem, changeServeType, clearCart, totalItems, totalAmount, getItemQty } =
     useCart(menuItems);
+  const { offerMap } = useOffers(menuItems);
 
   // Filters — activeCategory stores the category _id ("all" = show all)
   const [activeCategory, setActiveCategory] = useState("all");
@@ -78,6 +80,7 @@ const MenuBody = ({ branchInfo, tableInfo, menuItems, categories, onClose }) => 
         // tax: orderData.tax,  
         // total: orderData.total,
         specialInstructions: orderData.specialInstructions,
+        offerCode: orderData.offerCode,
         // orderType: "dine-in",
         // ...(guestUser && { customerName: guestUser.name, customerMobile: guestUser.mobile }),
       };
@@ -252,6 +255,7 @@ const MenuBody = ({ branchInfo, tableInfo, menuItems, categories, onClose }) => 
                         quantity={getItemQty(item._id)}
                         onAdd={addToCart}
                         onRemove={removeFromCart}
+                        offer={offerMap[item._id] || null}
                       />
                     ))}
                   </div>
@@ -268,6 +272,7 @@ const MenuBody = ({ branchInfo, tableInfo, menuItems, categories, onClose }) => 
                   quantity={getItemQty(item._id)}
                   onAdd={addToCart}
                   onRemove={removeFromCart}
+                  offer={offerMap[item._id] || null}
                 />
               ))}
             </div>
@@ -281,6 +286,8 @@ const MenuBody = ({ branchInfo, tableInfo, menuItems, categories, onClose }) => 
       {/* ── Cart Modal ────────────────────────────────────────────────── */}
       {showCart && (
         <CartModal
+          offerMap={offerMap}              // ✅ add this
+          branchId={branchInfo?._id}
           cart={cart}
           menuItems={menuItems}
           onUpdateQty={updateCartQty}
@@ -321,6 +328,7 @@ const CustomerMenuModal = ({ isOpen, onClose }) => {
 
   const { branchInfo, tableInfo, menuItems, categories, loading, error, refetch } =
     useMenuData(branchId, qrToken);
+
 
   useEffect(() => { if (isOpen) refetch(); }, [isOpen]);
 

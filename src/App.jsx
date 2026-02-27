@@ -24,6 +24,7 @@ import MyAccountPage from "./pages/MyAccountPage";
 import ScrollToTop from "./helper/ScrollToTop";
 import CustomerMenuModal from "./components/QrScan/Customermenumodal";
 import useAutoLogout from "./helper/useAutoLogout";
+import BranchDetail from "./pages/BranchDetail";
 
 function AppContent() {
   useAutoLogout();
@@ -52,7 +53,7 @@ function AppContent() {
           onClose={() => {
             setShowMenu(false)
             Navigate("/")
-           window.location.reload();
+            window.location.reload();
 
           }}
         />
@@ -67,6 +68,7 @@ function AppContent() {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/about-us" element={<AboutPage />} />
+            <Route path="/branch/:id" element={<BranchDetail />} />
             <Route path="/facilities" element={<FacilityPage />} />
             <Route path="/menus" element={<MenuPage />} />
             <Route path="/booking" element={<BookingPage />} />

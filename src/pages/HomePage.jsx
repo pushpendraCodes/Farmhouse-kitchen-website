@@ -243,7 +243,7 @@ const HomePage = () => {
             <Link
               key={branch.id}
               className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition cursor-pointer transform hover:scale-105"
-              to={`/menus?branchId=${branch._id}`}
+              to={`/branch/${branch._id}`}
             >
               <div className="relative">
                 <img src={branch?.pictures[0]} alt={branch.name} className="w-full h-48 object-cover" />
