@@ -115,7 +115,7 @@ export default function LoginPage() {
 
         try {
             const response = await axios.post(
-                `${import.meta.env.VITE_API_URL}/api/customer/resend-otp`,
+                `${import.meta.env.VITE_API_URL}/api/customer/auth/resend-otp`,
                 { phone: mobile }
             );
 
