@@ -11,11 +11,11 @@ import {
 
 export default function Footer() {
   return (
-    <footer className="bg-[#10162f] text-white pt-16 pb-8 px-4">
+    <footer className="bg-[#10162f] text-white pt-16 pb-8 px-4 font-sans">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 pb-8">
         {/* Column: Company */}
         <div>
-          <h3 className="text-2xl font-bold text-amber-400 mb-6 flex items-center gap-2">
+          <h3 className="font-display text-2xl font-bold text-amber-400 mb-6 flex items-center gap-2">
             Company
             <span className="flex-1 h-0.5 bg-amber-400 ml-4"></span>
           </h3>
@@ -45,7 +45,7 @@ export default function Footer() {
 
         {/* Column: Contact */}
         <div>
-          <h3 className="text-2xl font-bold text-amber-400 mb-6 flex items-center gap-2">
+          <h3 className="font-display text-2xl font-bold text-amber-400 mb-6 flex items-center gap-2">
             Contact
             <span className="flex-1 h-0.5 bg-amber-400 ml-4"></span>
           </h3>
@@ -81,7 +81,7 @@ export default function Footer() {
 
         {/* Column: Opening */}
         <div>
-          <h3 className="text-2xl font-bold text-amber-400 mb-6 flex items-center gap-2">
+          <h3 className="font-display text-2xl font-bold text-amber-400 mb-6 flex items-center gap-2">
             Opening
             <span className="flex-1 h-0.5 bg-amber-400 ml-4"></span>
           </h3>
@@ -93,7 +93,7 @@ export default function Footer() {
 
         {/* Column: Newsletter */}
         <div>
-          <h3 className="text-2xl font-bold text-amber-400 mb-6 flex items-center gap-2">
+          <h3 className="font-display text-2xl font-bold text-amber-400 mb-6 flex items-center gap-2">
             Newsletter
             <span className="flex-1 h-0.5 bg-amber-400 ml-4"></span>
           </h3>

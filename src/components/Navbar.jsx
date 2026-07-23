@@ -72,35 +72,35 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`fixed w-full top-0 z-50 transition-colors duration-300 ${
+      className={`fixed w-full top-0 z-50 font-sans transition-all duration-500 ${
         scrolled
-          ? "md:bg-slate-900 md:shadow-lg bg-slate-900"
-          : "md:bg-transparent bg-slate-900"
+          ? "bg-[#0b1020]/85 backdrop-blur-xl shadow-lg shadow-black/20 border-b border-amber-500/15"
+          : "md:bg-transparent bg-[#0b1020]/85 md:backdrop-blur-0 backdrop-blur-xl"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4">
-        <div className="flex justify-between items-center py-4">
+        <div className="flex justify-between items-center py-3">
           {/* Logo */}
-          <Link to="/" className="text-2xl font-bold text-amber-500 hover:text-amber-400 transition">
+          <Link to="/" className="text-2xl font-bold text-amber-500 hover:text-amber-400 transition group">
             {/* <ChefHat className="inline mr-2" /> */}
           <img
           src="/logo.jpg"
           alt="Logo"
-          className="w-18 h-18 rounded-full object-cover"
+          className="w-16 h-16 rounded-full object-cover ring-2 ring-amber-500/60 transition-transform duration-500 group-hover:scale-105 group-hover:ring-amber-400"
         />
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-6 text-white">
+          <div className="hidden md:flex items-center gap-7 text-white">
             {navLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
-                className={
+                className={`relative py-1 text-sm font-medium transition-colors after:absolute after:left-0 after:-bottom-0.5 after:h-0.5 after:bg-amber-400 after:transition-all after:duration-300 ${
                   isActive(link.to)
-                    ? "text-amber-400 font-bold underline underline-offset-8 transition"
-                    : "hover:text-amber-500 transition"
-                }
+                    ? "text-amber-400 after:w-full"
+                    : "text-gray-200 hover:text-amber-400 after:w-0 hover:after:w-full"
+                }`}
               >
                 {link.label}
               </Link>
@@ -108,7 +108,7 @@ const Navbar = () => {
             
             <Link
               to="/booking"
-              className="bg-amber-600 px-6 py-2 rounded hover:bg-amber-700 transition"
+              className="btn-premium bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-2.5 rounded-full text-sm font-bold text-[#0b1020]"
             >
               Book A Table
             </Link>
